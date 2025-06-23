@@ -1,0 +1,155 @@
+@charset "UTF-8";
+
+/* 전체 페이지 리셋 스타일 */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	font-family: Arial, sans-serif;
+	line-height: 1.6;
+	background-color: #f8f9fa;
+	color: #333;
+}
+
+/* 헤더와 네비게이션 스타일 */
+header {
+	width: 100%;
+	background-color: #343a40; /* 어두운 배경 */
+	color: white;
+}
+
+nav {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	padding: 10px 0;
+	background-color: #ffa500;
+}
+
+/* 메뉴 리스트 스타일 */
+nav ul {
+	list-style: none; /* 기본 리스트 스타일 제거 */
+	display: flex;
+	gap: 5px;
+	justify-content: flex-end; /* 메뉴를 오른쪽 끝에 정렬 */
+	margin-left: 20px;
+}
+
+nav ul li {
+	position: relative; /* 드롭다운 메뉴 위치 설정 */
+	padding-left: 7px;
+}
+
+/* 구분선을 ::before로 생성 */
+nav ul li::before {
+	content: ''; /* 빈 내용 */
+	position: absolute; /* li 내부에서 절대 위치 */
+	left: 0; /* li의 가장 왼쪽에 위치 */
+	top: 50%; /* 수직 가운데 정렬 */
+	transform: translateY(-50%); /* 수직 가운데 보정 */
+	width: 2px; /* 구분선 두께 */
+	height: 20px; /* 구분선 높이 */
+	background-color: #e5e5e5; /* 구분선 색상 */
+	margin: auto;
+}
+
+/* 첫 번째 li는 구분선 제거 */
+nav ul li:first-child::before {
+	content: none; /* 구분선을 표시하지 않음 */
+}
+
+/* a 태그와 구분선 간 간격 설정 */
+nav ul li a {
+	text-decoration: none;
+	color: white;
+	padding: 8px 8px;
+	display: block;
+	transition: background-color 0.3s ease;
+	padding-left: 20px; /* 구분선과 a 태그 사이의 간격 */
+}
+
+/* 드롭다운 메뉴 스타일 */
+.dropdown-menu {
+	display: none;
+	position: absolute;
+	top: 100%;
+	left: 0;
+	background-color: white;
+	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+	min-width: 120px;
+	max-width: 120px;
+	z-index: 10;
+	color: #000;
+}
+
+.dropdown-menu li a {
+	color: #000;
+	padding: 8px 12px;
+	width: 100%;
+	text-decoration: none; /* 링크 밑줄 제거 */
+}
+
+/* 드롭다운 메뉴 보이기 */
+.dropdown:hover .dropdown-menu {
+	display: block;
+}
+
+/* 로그인 상태 메시지 */
+.welcome-message {
+	margin-left: 0; /* 왼쪽 여백 제거 */
+	color: white;
+	display: flex;
+	align-items: center; /* 텍스트 세로 정렬 */
+	justify-content: flex-start; /* 왼쪽 정렬 */
+	padding-right: 5px;
+}
+
+/* 반응형 스타일 */
+@media ( max-width : 768px) {
+	nav ul {
+		flex-direction: column; /* 화면이 작아지면 세로 메뉴로 변경 */
+	}
+	nav ul li {
+		width: 100%;
+	}
+	.dropdown-menu {
+		position: static; /* 드롭다운 메뉴를 세로로 펼침 */
+		box-shadow: none;
+	}
+}
+
+.flex-menu {
+	display: flex; /* Flexbox 적용 */
+	justify-content: flex-end; /* 오른쪽 정렬 */
+	padding: 0; /* 기본 패딩 제거 */
+	margin: 0; /* 기본 마진 제거 */
+	list-style: none; /* 리스트 불릿 제거 */
+	padding-right: 10px;
+}
+
+.flex-menu a {
+	text-decoration: none; /* 링크 밑줄 제거 */
+	color: white; /* 링크 색상 설정 */
+	padding: 8px 16px; /* 링크 내부 여백 */
+	transition: background-color 0.3s ease;
+}
+
+.flex-menu a:hover {
+	background-color: #f0f0f0; /* 마우스 오버 시 배경색 */
+	border-radius: 4px; /* 모서리를 둥글게 설정 */
+	color: #000;
+}
+
+.My-site {
+	font-weight: bold;
+	font-size: 20px;
+	margin-top: 0;
+	margin-bottom: 0;
+	/* 오른쪽 여백을 자동으로 설정하여 왼쪽에 고정 */
+	list-style-type: none;
+	padding: 0;
+	margin-right: auto;
+}

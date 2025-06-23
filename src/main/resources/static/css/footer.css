@@ -1,0 +1,66 @@
+/* footer.css */
+#footer_wrap {
+	display: flex;
+	justify-content: space-between;
+	padding: 20px;
+	background-color: #333;
+	color: white;
+	font-size: 14px;
+	flex-wrap: wrap;
+}
+
+footer {
+	background-color: #333;
+	color: white;
+	padding: 20px 0;
+	margin-top: 50px; /* 푸터와 상단 콘텐츠 사이에 여백 추가 */
+}
+
+footer h3 {
+	font-size: 16px;
+	margin-bottom: 8px;
+	color: #fff;
+}
+
+footer ul {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+}
+
+footer ul li {
+	margin-bottom: 6px;
+	font-size: 13px;
+}
+
+footer ul li a {
+	color: #fff;
+	text-decoration: none;
+}
+
+footer ul li a:hover {
+	text-decoration: underline;
+}
+
+.office_info, .social_media, .legal_info {
+	flex: 1;
+	min-width: 180px;
+	margin-bottom: 20px;
+}
+
+#footer_bottom {
+	text-align: center;
+	margin-top: 10px;
+	font-size: 12px;
+}
+
+/* 반응형 디자인 */
+@media ( max-width : 768px) {
+	#footer_wrap {
+		flex-direction: column;
+		align-items: center;
+	}
+	.office_info, .social_media, .legal_info {
+		margin-bottom: 15px;
+	}
+}

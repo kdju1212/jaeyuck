@@ -1,0 +1,42 @@
+@charset "UTF-8";
+
+/* 댓글 등록 영역 */
+.search-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%; /* 가로로 넓힘 */
+    max-width: 1200px; /* 최대 너비 제한 (필요에 따라 조정) */
+    margin: 0 auto; /* 가로 가운데 정렬 */
+}
+
+/* 검색 폼 내부 */
+.search-form {
+    display: flex; /* Flexbox를 사용하여 가로로 배치 */
+    align-items: center; /* 세로 가운데 정렬 */
+}
+
+/* 텍스트 입력창 */
+.search-textarea {
+    height: 100px; /* 높이 조정 */
+    width: 800px; /* 너비 조정 */
+    resize: none;
+    box-sizing: border-box;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+/* 이미지 */
+.search-image {
+    cursor: pointer; /* 마우스를 올리면 클릭 가능한 느낌 */
+    width: 110px; /* 너비 */
+    height: 100px; /* 높이 */
+    padding: 6px 12px; /* 기존 버튼과 동일한 여백 */
+    display: inline-block; /* 버튼처럼 인라인 블록으로 표시 */
+    margin-left: 10px; /* 텍스트박스와 이미지 사이에 간격 추가 */
+    transition: transform 0.2s ease; /* 클릭 시 시각 효과 제거 */
+}
+
+.search-image:active {
+    transform: scale(0.95); /* 클릭 시 약간 눌리는 효과 */
+}

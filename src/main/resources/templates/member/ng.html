@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+실패
+<!-- 오류 메시지 표시 -->
+   <c:if test="${not empty errorMessage}">
+       <div class="message-box">
+           ${errorMessage}
+       </div>
+   </c:if>
+</body>
+</html>
