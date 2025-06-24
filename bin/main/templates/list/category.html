@@ -1,67 +1,49 @@
-<div style="margin-top: 20px;"></div>
 <!DOCTYPE html>
-<html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8">
-<title>분류 페이지</title>
-<link rel="stylesheet"
-	href="${pageContext.request.contextPath}/resources/css/list.css">
-<script src="${pageContext.request.contextPath}/resources/js/list.js"></script>
-<script>
-        var contextPath = "${pageContext.request.contextPath}"; // 컨텍스트 경로를 JavaScript 변수에 저장
+    <meta charset="UTF-8">
+    <title>분류 페이지</title>
+    <link rel="stylesheet" th:href="@{/resources/css/list.css}">
+    <script th:src="@{/resources/js/list.js}"></script>
+    <script th:inline="javascript">
+        // JSP의 contextPath를 Thymeleaf의 인라인 문법으로 대체
+        var contextPath = /*[[@{/}]]*/ '';
     </script>
 </head>
 <body>
-	<c:if test="${empty cookList}">
-		<div class="blank_bottom"></div>
-		<h1 style="text-align: center;">등록된 레시피가 없습니다.</h1>
-	</c:if>
-	<c:if test="${not empty cookList}">
-		<div class="cook-list">
-			<c:forEach var="cook" items="${cookList}">
-				<div class="cook-item clickable"
-					onclick="redirectToInfo(${cook.cook_no}, '${cook.CKG_NM}')">
-					<div class="cook-image">
-						<img src="<c:url value='/libraryUploadImg/${cook.CKG_IMG_URL}' />"
-							alt="${cook.CKG_NM}">
-					</div>
-					<div class="cook-info">
-						<div class="cook-name">${cook.CKG_NM}</div>
-						<div class="read-count">${cook.read_count}views</div>
-					</div>
-				</div>
-			</c:forEach>
-		</div>
-		<!-- 페이지네이션 -->
-		<div class="pagination">
-			<c:if test="${currentPage > 1}">
-				<a href="?category=${category}&page=1&pageSize=${pageSize}">첫
-					페이지</a>
-				<a
-					href="?category=${category}&page=${currentPage - 1}&pageSize=${pageSize}">«
-					이전</a>
-			</c:if>
+    <div style="margin-top: 20px;"></div>
 
-			<c:forEach var="i" begin="1" end="${totalPage}">
-				<c:choose>
-					<c:when test="${i == currentPage}">
-						<span class="current">${i}</span>
-					</c:when>
-					<c:otherwise>
-						<a href="?category=${category}&page=${i}&pageSize=${pageSize}">${i}</a>
-					</c:otherwise>
-				</c:choose>
-			</c:forEach>
+    <div th:if="${#lists.isEmpty(cookList)}">
+        <div class="blank_bottom"></div>
+        <h1 style="text-align: center;">등록된 레시피가 없습니다.</h1>
+    </div>
 
-			<c:if test="${currentPage < totalPage}">
-				<a
-					href="?category=${category}&page=${currentPage + 1}&pageSize=${pageSize}">다음
-					»</a>
-				<a
-					href="?category=${category}&page=${totalPage}&pageSize=${pageSize}">마지막
-					페이지</a>
-			</c:if>
-		</div>
-	</c:if>
+    <div th:if="${!#lists.isEmpty(cookList)}">
+        <div class="cook-list">
+            <div th:each="cook : ${cookList}" class="cook-item clickable"
+                 th:onclick="'redirectToInfo(' + ${cook.cook_no} + ', \'' + ${cook.CKG_NM} + '\')'">
+                <div class="cook-image">
+                    <img th:src="@{'/libraryUploadImg/' + ${cook.CKG_IMG_URL}}" th:alt="${cook.CKG_NM}">
+                </div>
+                <div class="cook-info">
+                    <div class="cook-name" th:text="${cook.CKG_NM}"></div>
+                    <div class="read-count" th:text="${cook.read_count + 'views'}"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination">
+            <a th:if="${currentPage > 1}" th:href="@{/(category=${category}, page=1, pageSize=${pageSize})}">첫 페이지</a>
+            <a th:if="${currentPage > 1}" th:href="@{/(category=${category}, page=${currentPage - 1}, pageSize=${pageSize})}">« 이전</a>
+
+            <span th:each="i : ${#numbers.sequence(1, totalPage)}">
+                <span th:if="${i == currentPage}" class="current" th:text="${i}"></span>
+                <a th:if="${i != currentPage}" th:href="@{/(category=${category}, page=${i}, pageSize=${pageSize})}" th:text="${i}"></a>
+            </span>
+
+            <a th:if="${currentPage < totalPage}" th:href="@{/(category=${category}, page=${currentPage + 1}, pageSize=${pageSize})}">다음 »</a>
+            <a th:if="${currentPage < totalPage}" th:href="@{/(category=${category}, page=${totalPage}, pageSize=${pageSize})}">마지막 페이지</a>
+        </div>
+    </div>
 </body>
 </html>

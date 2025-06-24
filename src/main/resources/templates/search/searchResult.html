@@ -1,37 +1,30 @@
-<div style="margin-top: 20px;"></div>
 <!DOCTYPE html>
-<html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8">
-<title>검색 결과</title>
-<link rel="stylesheet"
-	href="${pageContext.request.contextPath}/resources/css/list.css">
-<script src="${pageContext.request.contextPath}/resources/js/list.js"></script>
-<script>
-        var contextPath = "${pageContext.request.contextPath}"; // 컨텍스트 경로를 JavaScript 변수에 저장
-    </script>
-</head>
+    <meta charset="UTF-8">
+    <title>검색 결과</title>
+    </head>
 <body>
-	<c:if test="${empty searchResults}">
-	<div class="blank_bottom"></div>
-		<h1 style="text-align: center;">등록된 레시피가 없습니다.</h1>
-	</c:if>
-	<c:if test="${not empty searchResults}">
-		<div class="cook-list">
-			<c:forEach var="cook" items="${searchResults}">
-				<div class="cook-item clickable"
-					onclick="redirectToInfo(${cook.cook_no}, '${cook.CKG_NM}')">
-					<div class="cook-image">
-						<img src="<c:url value='/libraryUploadImg/${cook.CKG_IMG_URL}' />"
-							alt="${cook.CKG_NM}">
-					</div>
-					<div class="cook-info">
-						<div class="cook-name">${cook.CKG_NM}</div>
-						<div class="read-count">${cook.read_count} views</div>
-					</div>
-				</div>
-			</c:forEach>
-		</div>
-	</c:if>
+    <div style="margin-top: 20px;"></div>
+
+    <div th:if="${#lists.isEmpty(searchResults)}">
+        <h1 style="text-align: center;">등록된 레시피가 없습니다.</h1>
+    </div>
+
+    <div th:if="${!#lists.isEmpty(searchResults)}">
+        <div class="cook-list">
+            <div th:each="cook : ${searchResults}" class="cook-item clickable"
+                 th:onclick="'redirectToInfo(' + ${cook.cook_no} + ', \'' + ${cook.CKG_NM} + '\')'">
+                <div class="cook-image">
+                    <img th:src="@{'/libraryUploadImg/' + ${cook.CKG_IMG_URL}}" 
+                         alt="${cook.CKG_NM}">
+                </div>
+                <div class="cook-info">
+                    <div class="cook-name" th:text="${cook.CKG_NM}"></div>
+                    <div class="read-count" th:text="${cook.read_count + ' views'}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

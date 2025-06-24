@@ -1,15 +1,5 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>search</title>
-    <link rel="stylesheet" th:href="@{/resources/css/search.css}">
-    <script th:src="@{/resources/js/search.js}"></script>
-    <script th:inline="javascript">
-        // JSP의 contextPath를 Thymeleaf의 인라인 문법으로 대체
-        var contextPath = /*[[@{/}]]*/ '';
-    </script>
-</head>
 <body>
     <div th:fragment="searchBar">
         <div class="search-container">
@@ -18,13 +8,11 @@
                   class="search-form">
                 <textarea name="word" id="word" placeholder="검색어를 입력해 주세요."
                           class="search-textarea" onkeydown="fnEnterkey(event)" th:text="${word}"></textarea>
-                <img th:src="@{/resources/img/search-icon.png}"
-                     alt="검색" class="search-image" onclick="submitSearchForm(event)" />
+                <img th:src="@{/img/search-icon.png}" alt="검색" class="search-image" onclick="submitSearchForm(event)" />
             </form>
             <input type="hidden" name="userid" th:value="${loginedMemberVo != null ? loginedMemberVo.userid : ''}" id="userId" />
             <a href="javascript:void(0);" onclick="checkLoginBeforeRegister()"> 
-                <img th:src="@{/resources/img/register-icon.png}"
-                     alt="등록" class="search-image" />
+                <img th:src="@{/img/register-icon.png}" alt="등록" class="search-image" />
             </a>
         </div>
     </div>
