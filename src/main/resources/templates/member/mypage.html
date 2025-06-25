@@ -1,32 +1,33 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/base}">
+
 <head>
-<meta charset="UTF-8">
 <title>마이페이지</title>
-<link rel="stylesheet"
-	href="${pageContext.request.contextPath}/resources/css/member.css">
-<script src="${pageContext.request.contextPath}/resources/js/member.js"></script>
+<link rel="stylesheet" th:href="@{/css/member.css}"
+	layout:fragment="styles">
 </head>
+
 <body>
-	<div class="mypage-container">
-		<h1 class="mypage-title">마이페이지</h1>
-		<div class="button-row">
-			<button class="mpbtn btn-info"
-				onclick="location.href='<c:url value="/member/memberUpdateForm" />'">
-				내 정보 수정</button>
-			<button class="mpbtn btn-warning"
-				onclick="location.href='<c:url value="/member/pwdUpdate" />'">
-				비밀번호 변경</button>
-			<button class="mpbtn btn-danger"
-				onclick="location.href='<c:url value="/member/deletePwdCheck" />'">
-				회원 탈퇴</button>
-			<button class="mpbtn btn-primary2"
-				onclick="location.href='<c:url value="/board/myComment" />'">
-				내가 쓴 댓글</button>
-			<button class="mpbtn btn-success"
-				onclick="location.href='<c:url value="/list/myBookmark" />'">
-				북마크</button>
+	<div layout:fragment="content">
+		<div class="mypage-container">
+			<h1 class="mypage-title">마이페이지</h1>
+			<div class="button-row">
+				<button class="mpbtn btn-info"
+					onclick="location.href='memberUpdateForm'">내 정보 수정</button>
+				<button class="mpbtn btn-warning"
+					onclick="location.href='pwdUpdate'">비밀번호 변경</button>
+				<button class="mpbtn btn-danger"
+					onclick="location.href='deletePwdCheck'">회원 탈퇴</button>
+				<button class="mpbtn btn-primary2"
+					onclick="location.href='/board/myComment'">내가 쓴 댓글</button>
+				<button class="mpbtn btn-success"
+					onclick="location.href='/list/myBookmark'">북마크</button>
+			</div>
 		</div>
 	</div>
+	<script th:src="@{/js/member.js}" layout:fragment="scripts"></script>
 </body>
+
 </html>

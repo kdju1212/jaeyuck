@@ -1,68 +1,56 @@
-<div style="margin-top: 20px;"></div>
 <!DOCTYPE html>
-<html lang="kr">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
 <title>메시지 작성</title>
-<script>
-	var contextPath = "${pageContext.request.contextPath}";
+<script th:inline="javascript">
+	var contextPath = /*[[@{/}]]*/ '';
 </script>
-<script src="${pageContext.request.contextPath}/resources/js/message.js"></script>
-<link rel="stylesheet"
-	href="${pageContext.request.contextPath}/resources/css/message.css">
-
+<script th:src="@{/js/message.js}"></script>
+<link rel="stylesheet" th:href="@{/css/message.css}">
 </head>
 <body>
-	<form action="messageSend" method="POST" class="message-form"
-		name="frm" onsubmit="return titleCheck()">
+	<div style="margin-top: 20px;"></div>
+	<form th:action="@{/message/messageSend}" method="POST"
+		class="message-form" name="frm" onsubmit="return titleCheck()">
 		<div class="form-group">
 			<label for="sender">송신자</label> <span id="sender"
-				class="form-control">${loginedMemberVo.name}</span>
-			<!-- 텍스트로 변경 -->
-			<input type="hidden" name="send_id" value="${loginedMemberVo.userid}">
+				class="form-control" th:text="${loginedMemberVo.name}"></span>
+			<input type="hidden" name="send_id" th:value="${loginedMemberVo.userid}">
 		</div>
 
-		<c:if test="${not empty message.get_id_no || not empty admin_get_id}">
+		<div th:if="${not #strings.isEmpty(message?.get_id_no) or not #strings.isEmpty(admin_get_id)}">
 			<div class="form-group">
 				<label for="receiver">수신자 ID</label>
-				<c:if test="${loginedMemberVo.userid == message.get_id}">
-					<span id="receiver" class="form-control">${message.send_id_name}</span>
-					<input type="hidden" name="get_id" value="${message.send_id}">
-				</c:if>
-				<c:if test="${loginedMemberVo.userid == message.send_id}">
-					<span id="receiver" class="form-control">${message.get_id_name}</span>
-					<input type="hidden" name="get_id" value="${message.get_id}">
-				</c:if>
-				<c:if test="${not empty admin_get_id}">
-					<span id="admin" class="form-control">관리자</span>
-					<input type="hidden" name="get_id" value="${admin_get_id}">
-				</c:if>
-			</div>
-		</c:if>
+				<span th:if="${loginedMemberVo.userid == message?.get_id}" id="receiver" class="form-control" th:text="${message.send_id_name}"></span>
+				<input th:if="${loginedMemberVo.userid == message?.get_id}" type="hidden" name="get_id" th:value="${message.send_id}">
 
-		<c:if test="${empty message.get_id_no && empty admin_get_id}">
+				<span th:if="${loginedMemberVo.userid == message?.send_id}" id="receiver" class="form-control" th:text="${message.get_id_name}"></span>
+				<input th:if="${loginedMemberVo.userid == message?.send_id}" type="hidden" name="get_id" th:value="${message.get_id}">
+
+				<span th:if="${not #strings.isEmpty(admin_get_id)}" id="admin" class="form-control">관리자</span>
+				<input th:if="${not #strings.isEmpty(admin_get_id)}" type="hidden" name="get_id" th:value="${admin_get_id}">
+			</div>
+		</div>
+
+		<div th:unless="${not #strings.isEmpty(message?.get_id_no) or not #strings.isEmpty(admin_get_id)}">
 			<div class="form-group">
 				<label for="receiver">수신자 ID</label> <input type="text"
 					id="receiver" class="form-control" name="get_id">
 			</div>
-
-		</c:if>
+		</div>
 
 		<div class="form-group">
 			<label for="title">제목</label> <input type="text" id="title"
-				class="form-control" name="title">
+				class="form-control" name="title" th:value="${message?.title}">
 		</div>
-
 		<div class="form-group">
 			<label for="content">내용</label>
-			<textarea id="content" class="form-control-content" name="content"
-				resize="none"></textarea>
+			<textarea id="content" class="form-control" name="content"></textarea>
 		</div>
-
-		<div class="form-group">
-			<input type="submit" value="보내기" class="btn-submit">
-			<button type="button" class="btn-submit"
-				onclick="location.href='<c:url value="/message" />'">목록</button>
+		<div class="form-actions">
+			<button type="submit" class="btn btn-submit">보내기</button>
+			<button type="button" class="btn btn-cancel" onclick="history.back()">취소</button>
 		</div>
 	</form>
 </body>

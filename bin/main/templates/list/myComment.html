@@ -1,37 +1,45 @@
 <!DOCTYPE html>
-<html lang="kr">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/base}">
+
 <head>
-<meta charset="UTF-8">
 <title>내 댓글</title>
-<script type="text/javascript">
-        var contextPath = "${pageContext.request.contextPath}";
-    </script>
-<script src="${pageContext.request.contextPath}/resources/js/list.js"></script>
-<link rel="stylesheet" type="text/css"
-	href="${pageContext.request.contextPath}/resources/css/member.css">
 </head>
+
 <body>
-	<h1 class="page-title">내 댓글 목록</h1>
-	<c:if test="${empty comments}">
-		<div class="blank_bottom"></div>
-		<h2 class="no-comments">등록한 댓글이 없습니다.</h2>
-	</c:if>
-	<c:if test="${not empty comments}">
-		<div class="blank_bottom"></div>
-		<div class="my-comments-list">
-			<ul class="my-comments-list-items">
-				<c:forEach var="comment" items="${comments}">
-					<li class="my-comment-item clickable"
-						onclick="redirectToInfo(${comment.cook_no}, '${comment.CKG_NM}')">
-						<div class="my-recipe-name">${comment.CKG_NM}</div>
+	<div layout:fragment="content">
+		<h1 class="page-title">내 댓글 목록</h1>
+		<div th:if="${#lists.isEmpty(comments)}">
+			<div class="blank_bottom"></div>
+			<h2 class="no-comments">등록한 댓글이 없습니다.</h2>
+		</div>
+		<div th:if="${!#lists.isEmpty(comments)}">
+			<div class="blank_bottom"></div>
+			<div class="my-comments-list">
+				<ul class="my-comments-list-items">
+					<li th:each="comment : ${comments}"
+						class="my-comment-item clickable"
+						th:onclick="'redirectToInfo(' + ${comment.cook_no} + ', \'' + ${comment.CKG_NM} + '\')'">
+						<div class="my-recipe-name" th:text="${comment.CKG_NM}"></div>
 						<div class="my-comment-details">
-							<span class="my-comment-content">${comment.content}</span> <span
-								class="my-comment-date">${comment.write_date}</span>
+							<span class="my-comment-content" th:text="${comment.content}"></span>
+							<span class="my-comment-date" th:text="${comment.write_date}"></span>
 						</div>
 					</li>
-				</c:forEach>
-			</ul>
+				</ul>
+			</div>
 		</div>
-	</c:if>
+	</div>
+
+	<script th:inline="javascript" layout:fragment="scripts">
+		var contextPath = /*[[@{/}]]*/'';
+		// redirectToInfo 함수는 해당 페이지 또는 공통 JS 파일에 정의되어 있어야 합니다.
+		function redirectToInfo(cookNo, ckgNm) {
+			// 예시: 해당 레시피의 상세 페이지로 이동
+			window.location.href = contextPath + 'list/info?cook_no=' + cookNo;
+		}
+	</script>
 </body>
+
 </html>

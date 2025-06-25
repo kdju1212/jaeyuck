@@ -1,38 +1,36 @@
-<div style="margin-top: 20px;"></div>
 <!DOCTYPE html>
-<html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
-<title>레시피 목록</title>
-<link rel="stylesheet"
-	href="${pageContext.request.contextPath}/resources/css/list.css">
-<script
-	src="${pageContext.request.contextPath}/resources/js/register.js"></script>
-<script>
-        var contextPath = "${pageContext.request.contextPath}"; // 컨텍스트 경로를 JavaScript 변수에 저장
-    </script>
+<title>레시피 목록 (관리자)</title>
+<link rel="stylesheet" th:href="@{/css/list.css}">
+<script th:src="@{/js/register.js}"></script>
+<script th:inline="javascript">
+	var contextPath = /*[[@{/}]]*/ '';
+	// 레시피 상세 페이지로 리디렉션하는 함수
+	function redirectToRecipeDetails(recipeNo, CKG_NM) {
+		window.location.href = contextPath + "list/recipeDetails?recipe_no=" + recipeNo + "&CKG_NM=" + encodeURIComponent(CKG_NM);
+	}
+</script>
 </head>
 <body>
-	<c:if test="${empty recipeList}">
+	<div style="margin-top: 20px;"></div>
+	<div th:if="${#lists.isEmpty(recipeList)}">
 		<div class="blank_bottom"></div>
 		<h1 style="text-align: center;">등록된 레시피가 없습니다.</h1>
-	</c:if>
-	<c:if test="${not empty recipeList}">
+	</div>
+	<div th:unless="${#lists.isEmpty(recipeList)}">
 		<div class="cook-list">
-			<c:forEach var="recipe" items="${recipeList}">
-				<div class="cook-item clickable"
-					onclick="redirectToRecipeDetails(${recipe.recipe_no}, '${recipe.CKG_NM}')">
-					<div class="cook-image">
-						<img
-							src="<c:url value='/libraryUploadImg/${recipe.CKG_IMG_URL}' />"
-							alt="${recipe.CKG_NM}">
-					</div>
-					<div class="cook-info">
-						<div class="cook-name">${recipe.CKG_NM}</div>
-					</div>
+			<div th:each="recipe : ${recipeList}" class="cook-item clickable"
+				th:onclick="'redirectToRecipeDetails(' + ${recipe.recipe_no} + ', \'' + ${recipe.CKG_NM} + '\')'">
+				<div class="cook-image">
+					<img th:src="@{'/libraryUploadImg/' + ${recipe.CKG_IMG_URL}}" th:alt="${recipe.CKG_NM}">
 				</div>
-			</c:forEach>
+				<div class="cook-info">
+					<div class="cook-name" th:text="${recipe.CKG_NM}"></div>
+				</div>
+			</div>
 		</div>
-	</c:if>
+	</div>
 </body>
 </html>

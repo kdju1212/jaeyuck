@@ -1,20 +1,20 @@
-<div style="margin-top: 20px;"></div>
 <!DOCTYPE html>
-<html lang="kr">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
 <title>메시지 보내기 실패</title>
-<script>
-	var contextPath = "${pageContext.request.contextPath}";
+<script th:inline="javascript">
+	var contextPath = /*[[@{/}]]*/ '';
 </script>
-<script src="${pageContext.request.contextPath}/resources/js/message.js"></script>
-<link rel="stylesheet"
-	href="${pageContext.request.contextPath}/resources/css/message.css">
+<script th:src="@{/js/message.js}"></script>
+<link rel="stylesheet" th:href="@{/css/message.css}">
 </head>
 <body>
+	<div style="margin-top: 20px;"></div>
 	<div class="message-confirm message-confirm-fail">
 		<h1>등록된 아이디가 없습니다.</h1>
-		<a href="<c:url value='/message/' />">받은 쪽지함</a> <a href="<c:url value='/message/messageSendForm' />">쪽지 작성</a>
+		<a th:href="@{/message/}">받은 쪽지함</a>
+		<a th:href="@{/message/messageSendForm}">쪽지 작성</a>
 	</div>
 </body>
 </html>

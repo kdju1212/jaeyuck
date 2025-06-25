@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}">
 <head>
-    <meta charset="UTF-8">
     <title>분류 페이지</title>
-    <link rel="stylesheet" th:href="@{/resources/css/list.css}">
-    <script th:src="@{/resources/js/list.js}"></script>
-    <script th:inline="javascript">
-        // JSP의 contextPath를 Thymeleaf의 인라인 문법으로 대체
-        var contextPath = /*[[@{/}]]*/ '';
-    </script>
+    
+    <!-- 페이지 전용 CSS -->
+    <link rel="stylesheet" th:href="@{/css/list.css}" layout:fragment="styles">
 </head>
+
 <body>
+<div layout:fragment="content">
     <div style="margin-top: 20px;"></div>
 
     <div th:if="${#lists.isEmpty(cookList)}">
@@ -27,23 +28,33 @@
                 </div>
                 <div class="cook-info">
                     <div class="cook-name" th:text="${cook.CKG_NM}"></div>
-                    <div class="read-count" th:text="${cook.read_count + 'views'}"></div>
+                    <div class="read-count" th:text="${cook.read_count + ' views'}"></div>
                 </div>
             </div>
         </div>
 
         <div class="pagination">
-            <a th:if="${currentPage > 1}" th:href="@{/(category=${category}, page=1, pageSize=${pageSize})}">첫 페이지</a>
-            <a th:if="${currentPage > 1}" th:href="@{/(category=${category}, page=${currentPage - 1}, pageSize=${pageSize})}">« 이전</a>
+            <a th:if="${currentPage > 1}"
+               th:href="@{|/list/filter(category=${category}, page=1, pageSize=${pageSize})|}">첫 페이지</a>
+            <a th:if="${currentPage > 1}"
+               th:href="@{|/list/filter(category=${category}, page=${currentPage - 1}, pageSize=${pageSize})|}">« 이전</a>
 
             <span th:each="i : ${#numbers.sequence(1, totalPage)}">
                 <span th:if="${i == currentPage}" class="current" th:text="${i}"></span>
-                <a th:if="${i != currentPage}" th:href="@{/(category=${category}, page=${i}, pageSize=${pageSize})}" th:text="${i}"></a>
+                <a th:if="${i != currentPage}"
+                   th:href="@{|/list/filter(category=${category}, page=${i}, pageSize=${pageSize})|}"
+                   th:text="${i}"></a>
             </span>
 
-            <a th:if="${currentPage < totalPage}" th:href="@{/(category=${category}, page=${currentPage + 1}, pageSize=${pageSize})}">다음 »</a>
-            <a th:if="${currentPage < totalPage}" th:href="@{/(category=${category}, page=${totalPage}, pageSize=${pageSize})}">마지막 페이지</a>
+            <a th:if="${currentPage < totalPage}"
+               th:href="@{|/list/filter(category=${category}, page=${currentPage + 1}, pageSize=${pageSize})|}">다음 »</a>
+            <a th:if="${currentPage < totalPage}"
+               th:href="@{|/list/filter(category=${category}, page=${totalPage}, pageSize=${pageSize})|}">마지막 페이지</a>
         </div>
     </div>
+</div>
+
+<!-- 페이지 전용 JS -->
+<script th:src="@{/js/list.js}" layout:fragment="scripts"></script>
 </body>
 </html>

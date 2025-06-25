@@ -40,25 +40,31 @@ public class MemberDao {
 	 * user 정보 불러오기 (로그인)
 	 */
 	public MemberVo selectUser(MemberVo memberVo) {
+	    String sql = "SELECT * FROM member WHERE userid = ?";
+	    List<MemberVo> memberVos = null;
 
-		String sql = "SELECT * FROM member " + "WHERE userid = ?";
+	    try {
+	        RowMapper<MemberVo> rowMapper = BeanPropertyRowMapper.newInstance(MemberVo.class);
+	        memberVos = jdbcTemplate.query(sql, rowMapper, memberVo.getUserid());
 
-		List<MemberVo> memberVos = null;
+	        if (memberVos.isEmpty()) {
+	            return null;
+	        }
 
-		try {
+	        // 비밀번호 검증
+	        MemberVo dbMember = memberVos.get(0);
+	        if (!passwordEncoder.matches(memberVo.getPwd(), dbMember.getPwd())) {
+	            return null;
+	        }
 
-			RowMapper<MemberVo> rowMapper = BeanPropertyRowMapper.newInstance(MemberVo.class);
-			memberVos = jdbcTemplate.query(sql, rowMapper, memberVo.getUserid());
-			// matches는 암호화된 비밀번호를 복원함 // loginForm pw , 암호화된 비밀번호
-			if (!passwordEncoder.matches(memberVo.getPwd(), memberVos.get(0).getPwd()))
-				memberVos.clear();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+	        return dbMember;
 
-		return memberVos.size() > 0 ? memberVos.get(0) : null;
-
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return null;
+	    }
 	}
+
 
 	/*
 	 * userid로만 user 정보 불러오기

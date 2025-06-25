@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/base}">
+
 <head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
+<title>오류</title>
 </head>
+
 <body>
-실패
-<!-- 오류 메시지 표시 -->
-   <c:if test="${not empty errorMessage}">
-       <div class="message-box">
-           ${errorMessage}
-       </div>
-   </c:if>
+	<div layout:fragment="content">
+		실패
+		<div th:if="${not #strings.isEmpty(errorMessage)}" class="message-box"
+			th:text="${errorMessage}"></div>
+	</div>
+
 </body>
+
 </html>

@@ -1,292 +1,199 @@
-<div style="margin-top: 20px;"></div>
 <!DOCTYPE html>
-<html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/base}">
+
 <head>
-<meta charset="UTF-8">
 <title>요리 상세정보</title>
-<link rel="stylesheet"
-	href="${pageContext.request.contextPath}/resources/css/list.css">
-<script src="${pageContext.request.contextPath}/resources/js/board.js"></script>
-<script>
-	var contextPath = "${pageContext.request.contextPath}"; // 컨텍스트 경로를 JavaScript 변수에 저장
-	// 스크립트에 주소를 넣으니까 실제 주소에 오류가 발생
-</script>
+
+<!-- 개별 페이지 CSS -->
+<head layout:fragment="styles">
+<link rel="stylesheet" th:href="@{/css/list.css}">
 </head>
+</head>
+
 <body>
-	<div class="blank_bottom"></div>
-	<div class="form-actions">
-		<c:if
-			test="${not empty loginedMemberVo.userid && loginedMemberVo.userid == 'admin'}">
-			<!-- 레시피 수정 -->
-			<form action="/cook/list/modifyCooks" method="POST">
-				<input type="hidden" name="cook_no" value="${cookInfo.cook_no}">
-				<input type="hidden" name="CKG_NM" value="${cookInfo.CKG_NM}" /> <input
-					type="submit" class="modify-btn" value="레시피 수정">
-			</form>
-			<!-- 레시피 삭제 -->
-			<form action="/cook/list/deleteCooks" method="POST"
-				onsubmit="return confirm('레시피를 삭제하시겠습니까?');">
-				<input type="hidden" name="cook_no" value="${cookInfo.cook_no}">
-				<input type="hidden" name="CKG_NM" value="${cookInfo.CKG_NM}" /> <input
-					type="submit" class="delete-btn" value="레시피 삭제">
-			</form>
-		</c:if>
-	</div>
-	<c:choose>
-		<c:when test="${not empty cookInfo}">
-			<!-- 요리 상세 정보 -->
-			<div class="list center-container">
-				<div class="image-text-container">
-					<!-- 요리 사진 -->
-					<div class="image-container">
+	<div layout:fragment="content">
+		<div class="blank_bottom"></div>
+
+		<!-- 관리자만 수정/삭제 가능 -->
+		<div class="form-actions">
+			<div
+				th:if="${not #strings.isEmpty(loginedMemberVo?.userid) and loginedMemberVo?.userid == 'admin'}">
+				<form th:action="@{/list/modifyCooks}" method="POST">
+					<input type="hidden" name="cook_no" th:value="${cookInfo.cook_no}">
+					<input type="hidden" name="CKG_NM" th:value="${cookInfo.CKG_NM}" />
+					<input type="submit" class="modify-btn" value="레시피 수정">
+				</form>
+				<form th:action="@{/list/deleteCooks}" method="POST"
+					onsubmit="return confirm('레시피를 삭제하시겠습니까?');">
+					<input type="hidden" name="cook_no" th:value="${cookInfo.cook_no}">
+					<input type="hidden" name="CKG_NM" th:value="${cookInfo.CKG_NM}" />
+					<input type="submit" class="delete-btn" value="레시피 삭제">
+				</form>
+			</div>
+		</div>
+
+		<div class="cook-details-container">
+			<div class="cook-header">
+				<h1 class="cook-title" th:text="${cookInfo.CKG_NM}"></h1>
+				<p class="cook-views" th:text="${cookInfo.read_count + ' views'}"></p>
+			</div>
+
+			<div class="cook-content">
+				<div class="cook-image">
+					<img th:src="@{'/libraryUploadImg/' + ${cookInfo.CKG_IMG_URL}}"
+						th:alt="${cookInfo.CKG_NM}">
+				</div>
+
+				<div class="cook-ingredients">
+					<h2>재료</h2>
+					<ul>
+						<li th:each="ingredient : ${cookInfo.ingredients}"
+							th:text="${ingredient}"></li>
+					</ul>
+				</div>
+
+				<div class="cook-steps">
+					<h2>레시피 순서</h2>
+					<ol>
+						<li th:each="i : ${#numbers.sequence(1, 20)}"
+							th:if="${not #strings.isEmpty(cookInfo['step' + i])}"
+							th:text="${cookInfo['step' + i]}"></li>
+					</ol>
+				</div>
+			</div>
+
+			<!-- 북마크 및 좋아요/싫어요 -->
+			<div class="actions">
+				<form th:action="@{/list/toggleBookmark}" method="post"
+					name="bookmarkFrm">
+					<input type="hidden" name="cook_no" th:value="${cookInfo.cook_no}">
+					<input type="hidden" name="cookName" th:value="${cookInfo.CKG_NM}">
+					<button type="submit" class="bookmark-btn"
+						onclick="return checkLoginBeforeBookmark()">
 						<img
-							src="<c:url value='/libraryUploadImg/${cookInfo.CKG_IMG_URL}' />"
-							width="300" height="300" alt="${cookInfo.CKG_NM}">
-					</div>
-					<!-- 요리 상세 정보 -->
-					<div class="details">
-						<div class="d-cook-name">
-							<strong>${cookInfo.CKG_NM}</strong>
-						</div>
-						<div class="d-cook-portion">
-							<strong>${cookInfo.CKG_INBUN_NM}</strong>
-						</div>
-						<div class="d-cook-time">
-							<strong>${cookInfo.CKG_TIME_NM}</strong>
-						</div>
+							th:src="@{'/img/' + ${isBookmarked ? 'bookmarked.png' : 'bookmark.png'}}"
+							alt="북마크">
+					</button>
+				</form>
 
-						<!-- 북마크 버튼 추가 -->
-						<div class="bookmark-container" style="margin-top: 10px;">
-							<form id="bookmarkForm"
-								action="${pageContext.request.contextPath}/list/bookmark"
-								method="POST">
-								<c:if test="${empty loginedMemberVo.userid}">
-									<input type="hidden" name="userid" value="" id="userId" />
-									<input type="hidden" name="CKG_NM" value="${cookInfo.CKG_NM}"
-										id="CKG_NM" />
-									<input type="hidden" name="cook_no" value="${cookInfo.cook_no}"
-										id="cook_no" />
-									<input type="hidden" name="pageURL" id="pageURL" />
-									<div id="bookmarkButton"
-										class="bookmark-icon ${bookmarkExists != null && bookmarkExists ? 'yellow' : 'gray'}"
-										onclick="checkLoginBeforeComment()"></div>
+				<div class="like-dislike-section">
+					<form th:action="@{/list/incrementLike}" method="post">
+						<input type="hidden" name="cook_no" th:value="${cookInfo.cook_no}">
+						<input type="hidden" name="cookName" th:value="${cookInfo.CKG_NM}">
+						<input type="hidden" name="like_id"
+							th:value="${loginedMemberVo?.userid}"> <input
+							type="submit" value="좋아요"
+							onclick="return checkLoginBeforeComment()">
+					</form>
+					<span class="like-count" th:text="${board.likeCount}"></span>
 
-								</c:if>
-								<c:if test="${not empty loginedMemberVo.userid}">
-									<input type="hidden" name="userid"
-										value="${loginedMemberVo.userid}" id="userId" />
-									<input type="hidden" name="CKG_NM" value="${cookInfo.CKG_NM}"
-										id="CKG_NM" />
-									<input type="hidden" name="cook_no" value="${cookInfo.cook_no}"
-										id="cook_no" />
-									<input type="hidden" name="pageURL" id="pageURL" />
+					<form th:action="@{/list/incrementDislike}" method="post">
+						<input type="hidden" name="cook_no" th:value="${cookInfo.cook_no}">
+						<input type="hidden" name="cookName" th:value="${cookInfo.CKG_NM}">
+						<input type="hidden" name="like_id"
+							th:value="${loginedMemberVo?.userid}"> <input
+							type="submit" value="싫어요"
+							onclick="return checkLoginBeforeComment()">
+					</form>
+					<span class="dislike-count" th:text="${board.dislikeCount}"></span>
+				</div>
+			</div>
+		</div>
 
-									<div
-										class="bookmark-icon ${bookmarkExists != null && bookmarkExists ? 'yellow' : 'gray'}"
-										onclick="bookmark(event)"></div>
+		<!-- 댓글 작성 -->
+		<div class="comment-section">
+			<h2>댓글</h2>
+			<form th:action="@{/board/insertComment}" method="post">
+				<input type="hidden" name="cook_no" th:value="${cookInfo.cook_no}">
+				<input type="hidden" name="CKG_NM" th:value="${cookInfo.CKG_NM}">
+				<input type="hidden" name="userid"
+					th:value="${loginedMemberVo?.userid}">
+				<textarea name="content" placeholder="댓글을 입력하세요."
+					class="comment-textarea"></textarea>
+				<button type="submit" class="comment-submit-btn"
+					onclick="return checkLoginBeforeComment()">댓글 등록</button>
+			</form>
+		</div>
 
+		<!-- 댓글 목록 -->
+		<div class="comments-list-section">
+			<div th:if="${#lists.isEmpty(comments)}">
+				<p class="no-comments">아직 댓글이 없습니다.</p>
+			</div>
+			<div th:if="${!#lists.isEmpty(comments)}">
+				<div th:each="board : ${comments}" class="comment-item">
+					<div class="comment-meta">
+						<span class="comment-author" th:text="${board.userid}"></span> <span
+							class="comment-date" th:text="${board.write_date}"></span>
 
-								</c:if>
+						<div th:if="${loginedMemberVo?.userid == board.userid}"
+							class="comment-actions">
+							<form th:action="@{/board/deleteComment}" method="post">
+								<input type="hidden" name="board_no"
+									th:value="${board.board_no}"> <input type="hidden"
+									name="cook_no" th:value="${cookInfo.cook_no}"> <input
+									type="hidden" name="CKG_NM" th:value="${cookInfo.CKG_NM}">
+								<button type="submit" class="delete-comment-btn"
+									onclick="return confirm('댓글을 삭제하시겠습니까?');">삭제</button>
 							</form>
 						</div>
 					</div>
+					<p class="comment-content" th:text="${board.content}"></p>
+
+					<div class="comment-like-dislike">
+						<form th:action="@{/board/incrementLikeComment}" method="post">
+							<input type="hidden" name="board_no" th:value="${board.board_no}">
+							<input type="hidden" name="cook_no"
+								th:value="${cookInfo.cook_no}"> <input type="hidden"
+								name="CKG_NM" th:value="${cookInfo.CKG_NM}"> <input
+								type="hidden" name="like_id"
+								th:value="${loginedMemberVo?.userid}"> <input
+								type="submit" value="좋아요"
+								onclick="return checkLoginBeforeComment()">
+						</form>
+						<span class="like-count" th:text="${board.likeCount}"></span>
+						<form th:action="@{/board/incrementDislikeComment}" method="post">
+							<input type="hidden" name="board_no" th:value="${board.board_no}">
+							<input type="hidden" name="cook_no"
+								th:value="${cookInfo.cook_no}"> <input type="hidden"
+								name="CKG_NM" th:value="${cookInfo.CKG_NM}"> <input
+								type="hidden" name="like_id"
+								th:value="${loginedMemberVo?.userid}"> <input
+								type="submit" value="싫어요"
+								onclick="return checkLoginBeforeComment()">
+						</form>
+						<span class="dislike-count" th:text="${board.dislikeCount}"></span>
+					</div>
 				</div>
 			</div>
+		</div>
 
-			<div class="blank_bottom"></div>
+		<!-- 페이지네이션 -->
+		<div class="pagination">
+			<a th:if="${currentPage > 1}"
+				th:href="@{|?cook_no=${cookInfo.cook_no}&cookName=${cookInfo.CKG_NM}&page=1|}">첫
+				페이지</a> <a th:if="${currentPage > 1}"
+				th:href="@{|?cook_no=${cookInfo.cook_no}&cookName=${cookInfo.CKG_NM}&page=${currentPage - 1}|}">이전</a>
 
-			<!-- 추가적인 정보 (재료 및 레시피) -->
-			<div class="mtrl-container center-container">
-				<div class="recipe-title">
-					<strong>[재료]</strong>
-				</div>
-				<!-- 재료 정보 -->
-				<div class="ingredients">
-					<p>${cookInfo.CKG_MTRL_CN}</p>
-				</div>
-			</div>
+			<span th:each="i : ${#numbers.sequence(1, totalPages)}"> <span
+				th:if="${i == currentPage}" class="current" th:text="${i}"></span> <a
+				th:if="${i != currentPage}"
+				th:href="@{|?cook_no=${cookInfo.cook_no}&cookName=${cookInfo.CKG_NM}&page=${i}|}"
+				th:text="${i}"></a>
+			</span> <a th:if="${currentPage < totalPages}"
+				th:href="@{|?cook_no=${cookInfo.cook_no}&cookName=${cookInfo.CKG_NM}&page=${currentPage + 1}|}">다음</a>
+			<a th:if="${currentPage < totalPages}"
+				th:href="@{|?cook_no=${cookInfo.cook_no}&cookName=${cookInfo.CKG_NM}&page=${totalPages}|}">마지막
+				페이지</a>
+		</div>
+	</div>
 
-			<div class="blank_bottom"></div>
-
-			<div class="recipe-container center-container">
-				<div class="recipe-title">
-					<strong>[레시피]</strong>
-				</div>
-				<!-- 레시피 단계 -->
-				<ol class="recipe-steps">
-					<c:forEach var="step" items="${steps}">
-						<li>${step}</li>
-					</c:forEach>
-				</ol>
-			</div>
-
-			<div class="blank_bottom"></div>
-
-			<div class="share-container center-container">
-				<div class="share-title">
-					<strong>[공유하기]</strong>
-				</div>
-				<div class="youtubeLink">
-					<img
-					    src="${pageContext.request.contextPath}/resources/img/youtube.png"
-					    alt="youtube" class="search-image" onclick="window.location.href = 'https://www.youtube.com/results?search_query=' + encodeURIComponent('${cookInfo.CKG_NM}')"> 
-					<img
-						src="${pageContext.request.contextPath}/resources/img/icon-twitter.png"
-						alt="X" class="search-image" onclick="shareTwitter()" /> <img
-						src="${pageContext.request.contextPath}/resources/img/icon-facebook.png"
-						alt="facebook" class="search-image" onclick="shareFacebook()" /> <img
-						src="${pageContext.request.contextPath}/resources/img/copy-link.png"
-						alt="copy" class="search-image" onclick="clipBoard()" />
-				</div>
-			</div>
-			<div class="blank_bottom"></div>
-
-			<!-- 댓글 등록 폼 -->
-			<div class="comment-container">
-				<form id="commentForm"
-					action="${pageContext.request.contextPath}/board/addComment"
-					method="post" onsubmit="return validateCommentForm()"
-					class="comment-form">
-					<input type="hidden" name="CKG_NM" value="${cookInfo.CKG_NM}" /> <input
-						type="hidden" name="cook_no" value="${cookInfo.cook_no}"
-						id="cook_no" /> <input type="hidden" name="userid"
-						value="${loginedMemberVo.userid}" id="userId" />
-					<textarea name="content" id="content"
-						onclick="return checkLoginBeforeComment(event)"
-						class="comment-textarea" placeholder="댓글을 남겨주세요."
-						onkeydown="preventEnter(event)"></textarea>
-					<input type="submit" value="댓글 등록" class="comment-submit" />
-				</form>
-			</div>
-
-			<div class="blank_bottom"></div>
-
-			<!-- 댓글 리스트 -->
-			<c:if test="${not empty boardList}">
-				<div class="comment-list">
-					<c:forEach var="board" items="${boardList}">
-						<div class="comment-item">
-							<div class="comment-header">
-								<span class="comment-id">${board.userid}</span> <span
-									class="comment-date">${board.write_date}</span>
-							</div>
-
-							<!-- 댓글 내용 -->
-							<div class="comment-content">
-								<span id="content-text-${board.content}-${board.board_no}" class="comment-text">${board.content}</span>
-								<textarea name="new_content" id="content-edit-${board.content}-${board.board_no}"
-									class="comment-textarea" style="display: none">${board.content}</textarea>
-							</div>
-
-							<div class="comment-actions">
-								<div class="comment-buttons">
-									<c:if test="${board.userid == loginedMemberVo.userid}">
-										<!-- 수정 버튼 -->
-										<form id="updateForm-${board.content}-${board.board_no}"
-											action="/cook/board/updateComment" method="POST">
-											<input type="hidden" name="board_no"
-												value="${board.board_no}"> <input type="hidden"
-												name="cook_no" value="${board.cook_no}"> <input
-												type="hidden" name="content" value="${board.content}">
-											<input type="hidden" name="userid" value="${board.userid}">
-											<input type="hidden" name="CKG_NM" value="${board.CKG_NM}">
-											<input type="submit" value="수정"
-												id="updateButton-${board.content}-${board.board_no}"
-												onclick="return editComment('${board.content}','${board.board_no}')">
-										</form>
-									</c:if>
-									<c:if
-										test="${board.userid == loginedMemberVo.userid || loginedMemberVo.userid == 'admin'}">
-										<!-- 삭제 버튼 -->
-										<form action="/cook/board/deleteComment" method="POST"
-											onsubmit="return confirm('정말로 댓글을 삭제하시겠습니까?');">
-											<input type="hidden" name="board_no"
-												value="${board.board_no}"> <input type="hidden"
-												name="cook_no" value="${board.cook_no}"> <input
-												type="hidden" name="content" value="${board.content}">
-											<input type="hidden" name="userid" value="${board.userid}">
-											<input type="hidden" name="CKG_NM" value="${board.CKG_NM}">
-											<input type="submit" value="삭제">
-										</form>
-									</c:if>
-								</div>
-								<c:if
-									test="${board.userid != loginedMemberVo.userid && loginedMemberVo.userid != 'admin'}">
-								</c:if>
-
-								<!-- 좋아요 및 싫어요 버튼 -->
-								<div class="comment-likes">
-									<form action="/cook/board/likeComment" method="POST"
-										onsubmit="return checkLoginBeforeComment()">
-										<input type="hidden" name="board_no" value="${board.board_no}">
-										<input type="hidden" name="cook_no" value="${board.cook_no}">
-										<input type="hidden" name="content" value="${board.content}">
-										<input type="hidden" name="userid" value="${board.userid}">
-										<input type="hidden" name="CKG_NM" value="${board.CKG_NM}">
-										<input type="hidden" name="liked" value="1"> <input
-											type="hidden" name="like_id"
-											value="${loginedMemberVo.userid}"> <input
-											type="submit" value="좋아요">
-									</form>
-									<span class="like-count">${board.likeCount}</span>
-
-									<form action="/cook/board/dislikeComment" method="POST">
-										<input type="hidden" name="board_no" value="${board.board_no}">
-										<input type="hidden" name="cook_no" value="${board.cook_no}">
-										<input type="hidden" name="content" value="${board.content}">
-										<input type="hidden" name="userid" value="${board.userid}">
-										<input type="hidden" name="CKG_NM" value="${board.CKG_NM}">
-										<input type="hidden" name="disliked" value="1"> <input
-											type="hidden" name="like_id"
-											value="${loginedMemberVo.userid}"> <input
-											type="submit" value="싫어요"
-											onclick="return checkLoginBeforeComment()">
-									</form>
-									<span class="dislike-count">${board.dislikeCount}</span>
-								</div>
-							</div>
-						</div>
-					</c:forEach>
-				</div>
-			</c:if>
-
-			<!-- 페이지네이션 UI -->
-			<div class="pagination">
-				<c:if test="${currentPage > 1}">
-					<a
-						href="?cook_no=${cookInfo.cook_no}&cookName=${cookInfo.CKG_NM}&page=1">첫
-						페이지</a>
-					<a
-						href="?cook_no=${cookInfo.cook_no}&cookName=${cookInfo.CKG_NM}&page=${currentPage - 1}">이전</a>
-				</c:if>
-
-				<c:forEach var="i" begin="1" end="${totalPages}">
-					<c:if test="${i == currentPage}">
-						<span class="current">${i}</span>
-					</c:if>
-					<c:if test="${i != currentPage}">
-						<a
-							href="?cook_no=${cookInfo.cook_no}&cookName=${cookInfo.CKG_NM}&page=${i}">${i}</a>
-					</c:if>
-				</c:forEach>
-
-				<c:if test="${currentPage < totalPages}">
-					<a
-						href="?cook_no=${cookInfo.cook_no}&cookName=${cookInfo.CKG_NM}&page=${currentPage + 1}">다음</a>
-					<a
-						href="?cook_no=${cookInfo.cook_no}&cookName=${cookInfo.CKG_NM}&page=${totalPages}">마지막
-						페이지</a>
-				</c:if>
-			</div>
-
-			<c:if test="${empty boardList}">
-				<h1 style="text-align: center;">작성된 댓글이 없습니다.</h1>
-				<div class="blank_bottom"></div>
-			</c:if>
-		</c:when>
-		<c:otherwise>
-			<p>해당 요리 정보를 찾을 수 없습니다.</p>
-		</c:otherwise>
-	</c:choose>
+	<!-- 페이지 전용 JS -->
+	<script layout:fragment="scripts" th:src="@{/js/board.js}"></script>
+	<script th:inline="javascript">
+		var contextPath = /*[[@{/}]]*/'';
+	</script>
 </body>
 </html>

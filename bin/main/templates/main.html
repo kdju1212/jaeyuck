@@ -1,59 +1,69 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/base}">
+
 <head>
-    <meta charset="UTF-8">
-    <title>레시피 목록</title>
-    <link rel="stylesheet" th:href="@{/css/header.css}">
-    <script type="text/javascript" th:src="@{/js/member.js}"></script>
-    <link rel="stylesheet" th:href="@{/css/list.css}">
-    <script th:src="@{/js/list.js}"></script>
-    <link rel="stylesheet" th:href="@{/css/footer.css}">
-    
-    <link rel="stylesheet" th:href="@{/css/search.css}">
-    <script th:src="@{/js/search.js}"></script>
-    
-    <script th:inline="javascript">
-        var contextPath = /*[[@{/}]]*/ '';
-    </script>
+<title>레시피 목록</title>
+<link rel="stylesheet" th:href="@{/css/list.css}"
+	layout:fragment="styles">
+<link rel="stylesheet" th:href="@{/css/search.css}"
+	layout:fragment="styles">
 </head>
+
 <body>
+	<div layout:fragment="content">
+		<div style="margin-top: 20px;"></div>
 
-    <div th:replace="~{header :: header}"></div> 
-    <div style="margin-top: 20px;"></div>
+		<div th:replace="~{search/search :: searchBar}"></div>
+		<div th:if="${#lists.isEmpty(cookList)}">
+			<h1 style="text-align: center;">등록된 레시피가 없습니다.</h1>
+		</div>
 
-    <div th:replace="~{search/search :: searchBar}"></div>
-    <div th:if="${#lists.isEmpty(cookList)}">
-        <h1 style="text-align: center;">등록된 레시피가 없습니다.</h1>
-    </div>
+		<div th:if="${!#lists.isEmpty(cookList)}">
+			<div class="cook-list">
+				<div th:each="cook : ${cookList}" class="cook-item clickable"
+					th:onclick="'redirectToInfo(' + ${cook.cook_no} + ', \'' + ${cook.CKG_NM} + '\')'">
+					<div class="cook-image">
+						<img th:src="@{'/libraryUploadImg/' + ${cook.CKG_IMG_URL}}"
+							th:alt="${cook.CKG_NM}">
+					</div>
+					<div class="cook-info">
+						<div class="cook-name" th:text="${cook.CKG_NM}"></div>
+						<div class="read-count" th:text="${cook.read_count + ' views'}"></div>
+					</div>
+				</div>
+			</div>
 
-    <div th:if="${!#lists.isEmpty(cookList)}">
-        <div class="cook-list">
-            <div th:each="cook : ${cookList}" class="cook-item clickable"
-                 th:onclick="'redirectToInfo(' + ${cook.cook_no} + ', \'' + ${cook.CKG_NM} + '\')'">
-                <div class="cook-image">
-                    <img th:src="@{'/libraryUploadImg/' + ${cook.CKG_IMG_URL}}" th:alt="${cook.CKG_NM}">
-                </div>
-                <div class="cook-info">
-                    <div class="cook-name" th:text="${cook.CKG_NM}"></div>
-                    <div class="read-count" th:text="${cook.read_count + ' views'}"></div>
-                </div>
-            </div>
-        </div>
+			<div class="pagination">
+				<a th:if="${currentPage > 1}" th:href="@{|?page=1|}">첫 페이지</a> <a
+					th:if="${currentPage > 1}" th:href="@{|?page=${currentPage - 1}|}">«
+					이전</a> <span th:each="i : ${#numbers.sequence(1, totalPage)}"> <span
+					th:if="${i == currentPage}" class="current" th:text="${i}"></span>
+					<a th:if="${i != currentPage}" th:href="@{|?page=${i}|}"
+					th:text="${i}"></a>
+				</span> <a th:if="${currentPage < totalPage}"
+					th:href="@{|?page=${currentPage + 1}|}">다음 »</a> <a
+					th:if="${currentPage < totalPage}"
+					th:href="@{|?page=${totalPage}|}">마지막 페이지</a>
+			</div>
+		</div>
 
-        <div class="pagination">
-            <a th:if="${currentPage > 1}" th:href="@{|?page=1|}">첫 페이지</a>
-            <a th:if="${currentPage > 1}" th:href="@{|?page=${currentPage - 1}|}">« 이전</a>
+		<div th:fragment="scripts">
+			<script type="text/javascript" th:src="@{/js/member.js}"></script>
+			<script th:src="@{/js/list.js}"></script>
+			<script th:src="@{/js/search.js}"></script>
+			<script th:inline="javascript">
+				var contextPath = /*[[@{/}]]*/'';
+				function redirectToInfo(cookNo, ckgNm) {
+					window.location.href = contextPath + 'list/info?cook_no='
+							+ cookNo;
+				}
+			</script>
+		</div>
 
-            <span th:each="i : ${#numbers.sequence(1, totalPage)}">
-                <span th:if="${i == currentPage}" class="current" th:text="${i}"></span>
-                <a th:if="${i != currentPage}" th:href="@{|?page=${i}|}" th:text="${i}"></a>
-            </span>
+	</div>
 
-            <a th:if="${currentPage < totalPage}" th:href="@{|?page=${currentPage + 1}|}">다음 »</a>
-            <a th:if="${currentPage < totalPage}" th:href="@{|?page=${totalPage}|}">마지막 페이지</a>
-        </div>
-    </div>
-
-    <div th:replace="~{footer :: footer}"></div>
 </body>
+
 </html>

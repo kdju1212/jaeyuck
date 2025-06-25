@@ -27,6 +27,19 @@ function idCheck() {
 	window.open(url, "_blank_1",
 		"toolbar=no, menubar=no, scrollbars=yes, resizable=no, width=450, height=440");
 }
+/*function idCheck() {
+	const userid = document.frm.userid.value.trim();
+	if (!userid) {
+		alert('아이디를 입력하여 주십시오.');
+		document.frm.userid.focus();
+		return;
+	}
+
+	const url = "idCheck?userid=" + encodeURIComponent(userid);
+	window.open(url, "idCheckPopup",  // 창 이름 지정
+		"toolbar=no, menubar=no, scrollbars=yes, resizable=no, width=450, height=440");
+}*/
+
 
 function idok(userid) {
 	// 부모 창의 아이디와 reid 필드에 값을 설정

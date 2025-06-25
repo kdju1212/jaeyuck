@@ -1,20 +1,18 @@
-<div style="margin-top: 20px;"></div>
 <!DOCTYPE html>
-<html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 <meta charset="UTF-8">
-<title>registerForm.jsp</title>
-<link rel="stylesheet"
-	href="${pageContext.request.contextPath}/resources/css/register.css">
-<script
-	src="${pageContext.request.contextPath}/resources/js/register.js"></script>
+<title>레시피 등록</title>
+<link rel="stylesheet" th:href="@{/css/register.css}">
+<script th:src="@{/js/register.js}"></script>
 </head>
 <body>
+	<div style="margin-top: 20px;"></div>
 	<div class="blank_bottom"></div>
 
 	<h2>레시피 등록</h2>
 	<p>' * ' 표시 항목은 필수 입력 항목입니다.</p>
-	<form id="registerForm" action="/cook/list/register" method="post"
+	<form id="registerForm" th:action="@{/list/register}" method="post"
 		enctype="multipart/form-data" name="register_form"
 		onsubmit="return registerForm(event)">
 		<div class="form-group">
@@ -30,25 +28,24 @@
 				name="CKG_INBUN_NM" id="CKG_INBUN_NM">
 		</div>
 		<div class="form-group">
-			<label for="CKG_TIME_NM">소요 시간 *</label> <input type="text"
-				name="CKG_TIME_NM" id="CKG_TIME_NM">
+			<label for="CKG_MTRL_NM">재료 *</label> <input type="text"
+				name="CKG_MTRL_NM" id="CKG_MTRL_NM">
 		</div>
 		<div class="form-group">
-			<label for="CKG_KND_ACTO_NM">분류 *</label> <select
-				name="CKG_KND_ACTO_NM" id="CKG_KND_ACTO_NM">
-				<option value="1">한식</option>
-				<option value="2">중식</option>
-				<option value="3">일식</option>
-				<option value="4">양식</option>
-				<option value="5">기타</option>
-			</select>
+			<label for="CKG_KND_NM">종류 *</label> <input type="text"
+				name="CKG_KND_NM" id="CKG_KND_NM">
 		</div>
 		<div class="form-group">
-			<label for="CKG_MTRL_CN">재료 *</label> <input type="text"
-				name="CKG_MTRL_CN" id="CKG_MTRL_CN">
+			<label for="CKG_MTH_NM">방법 *</label> <input type="text"
+				name="CKG_MTH_NM" id="CKG_MTH_NM">
 		</div>
-		<ul>
-			<li class="form-group"><label for="step1">레시피 1 *</label> <input
+		<div class="form-group">
+			<label for="CKG_SIT_NM">상황 *</label> <input type="text"
+				name="CKG_SIT_NM" id="CKG_SIT_NM">
+		</div>
+
+		<ul class="recipe-steps">
+			<li class="form-group"><label for="step1">레시피 1</label> <input
 				type="text" name="step1" id="step1"></li>
 			<li class="form-group"><label for="step2">레시피 2</label> <input
 				type="text" name="step2" id="step2"></li>
@@ -89,9 +86,10 @@
 			<li class="form-group"><label for="step20">레시피 20</label> <input
 				type="text" name="step20" id="step20"></li>
 		</ul>
+
 		<div class="form-actions">
-			<input type="submit" value="등록"> <input type="reset"
-				value="초기화">
+			<button type="submit" class="btn btn-submit">등록</button>
+			<button type="button" class="btn btn-cancel" onclick="history.back()">취소</button>
 		</div>
 	</form>
 </body>

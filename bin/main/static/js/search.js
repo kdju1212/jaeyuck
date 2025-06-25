@@ -13,14 +13,14 @@ function checkLoginBeforeRegister() {
 		var isLogin = confirm("로그인이 필요합니다. 로그인하시겠습니까?");
 		if (isLogin) {
 			// 로그인 페이지로 리디렉션
-			window.location.href = contextPath + "/member/loginForm"; // contextPath 변수를 사용
+			window.location.href = "/member/loginForm"; // contextPath 변수를 사용
 		} else {
 			// 아무 동작도 하지 않고 그대로 페이지에 남아있음
 			return false;
 		}
 	} else {
 		// 로그인 되어있다면, 등록 폼으로 리디렉션
-		window.location.href = contextPath + "/list/registerForm";
+		window.location.href = "/list/registerForm";
 	}
 }
 

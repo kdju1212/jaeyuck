@@ -1,37 +1,41 @@
 <!DOCTYPE html>
-<html lang="kr">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/base}">
+
 <head>
-    <meta charset="UTF-8">
-    <title>비밀번호 변경</title>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/resources/css/member.css">
+<title>비밀번호 변경</title>
+<link rel="stylesheet" th:href="@{/css/member.css}"
+	layout:fragment="styles">
 </head>
+
 <body>
-    <div class="password-change-container">
-        <h2 class="password-change-title">비밀번호 변경</h2>
-        <form action="/cook/member/pwdUpdateConfirm" method="post" name="frm" class="password-change-form">
-            <ul class="password-change-form-list">
-                <li class="form-item">
-                    <label for="userid" class="form-label">아이디</label>
-                    <input type="text" id="userid" name="userid" class="input-field" value="${loginedMemberVo.userid}" readonly>
-                </li>
-                <li class="form-item">
-                    <label for="pwd" class="form-label">현재 암호</label>
-                    <input type="password" id="pwd" name="pwd" class="input-field">
-                </li>
-                <li class="form-item">
-                    <label for="new_pwd" class="form-label">새로운 암호</label>
-                    <input type="password" id="new_pwd" name="new_pwd" class="input-field">
-                </li>
-                <li class="form-item password-change-actions">
-                    <input type="submit" value="확인" class="btn-submit" onclick="return loginCheck()">
-                </li>
-                <c:if test="${not empty message}">
-                    <li class="form-item error-message">
-                        <span>${message}</span>
-                    </li>
-                </c:if>
-            </ul>
-        </form>
-    </div>
+	<div layout:fragment="content">
+		<div class="password-change-container">
+			<h2 class="password-change-title">비밀번호 변경</h2>
+			<form th:action="@{/member/pwdUpdateConfirm}" method="post"
+				name="frm" class="password-change-form">
+				<ul class="password-change-form-list">
+					<li class="form-item"><label for="userid" class="form-label">아이디</label>
+						<input type="text" id="userid" name="userid" class="input-field"
+						th:value="${loginedMemberVo.userid}" readonly></li>
+					<li class="form-item"><label for="pwd" class="form-label">현재
+							암호</label> <input type="password" id="pwd" name="pwd" class="input-field">
+					</li>
+					<li class="form-item"><label for="new_pwd" class="form-label">새로운
+							암호</label> <input type="password" id="new_pwd" name="new_pwd"
+						class="input-field"></li>
+					<li class="form-item password-change-actions"><input
+						type="submit" value="확인" class="btn-submit"
+						onclick="return loginCheck()"></li>
+					<div th:if="${not #strings.isEmpty(message)}"
+						class="form-item error-message">
+						<span th:text="${message}"></span>
+					</div>
+				</ul>
+			</form>
+		</div>
+	</div>
 </body>
+
 </html>
