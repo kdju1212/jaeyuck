@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Neon DB 테스트</title>
+</head>
+<body>
+    <h1>Neon DB 데이터</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="row : ${neonData}">
+                <td th:text="${row['id']}">ID</td>
+                <td th:text="${row['name']}">Name</td>
+                <td th:text="${row['value']}">Value</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

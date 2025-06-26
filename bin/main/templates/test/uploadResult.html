@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>업로드 결과</title>
+</head>
+<body>
+	<h1>결과</h1>
+	<div th:if="${imageUrl}">
+		<p>업로드 성공!</p>
+		<img th:src="${imageUrl}" alt="업로드 이미지" style="max-width: 300px;">
+	</div>
+	<div th:if="${error}">
+		<p th:text="${error}"></p>
+	</div>
+	<a href="/cloudinary/uploadForm">다시 업로드</a>
+</body>
+</html>

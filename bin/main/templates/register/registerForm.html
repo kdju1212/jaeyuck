@@ -1,96 +1,90 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/base}">
+
 <head>
-<meta charset="UTF-8">
 <title>레시피 등록</title>
-<link rel="stylesheet" th:href="@{/css/register.css}">
-<script th:src="@{/js/register.js}"></script>
+<link rel="stylesheet" th:href="@{/css/register.css}"
+	layout:fragment="styles">
 </head>
+
 <body>
-	<div style="margin-top: 20px;"></div>
-	<div class="blank_bottom"></div>
+	<div layout:fragment="content">
+		<h1 class="page-title">레시피 등록</h1>
 
-	<h2>레시피 등록</h2>
-	<p>' * ' 표시 항목은 필수 입력 항목입니다.</p>
-	<form id="registerForm" th:action="@{/list/register}" method="post"
-		enctype="multipart/form-data" name="register_form"
-		onsubmit="return registerForm(event)">
-		<div class="form-group">
-			<label for="CKG_NM">요리 이름 *</label> <input type="text" name="CKG_NM"
-				id="CKG_NM">
-		</div>
-		<div class="form-group">
-			<label for="CKG_IMG_FILE">요리 이미지 *</label> <input type="file"
-				name="CKG_IMG_FILE" id="CKG_IMG_FILE">
-		</div>
-		<div class="form-group">
-			<label for="CKG_INBUN_NM">요리 인분 *</label> <input type="text"
-				name="CKG_INBUN_NM" id="CKG_INBUN_NM">
-		</div>
-		<div class="form-group">
-			<label for="CKG_MTRL_NM">재료 *</label> <input type="text"
-				name="CKG_MTRL_NM" id="CKG_MTRL_NM">
-		</div>
-		<div class="form-group">
-			<label for="CKG_KND_NM">종류 *</label> <input type="text"
-				name="CKG_KND_NM" id="CKG_KND_NM">
-		</div>
-		<div class="form-group">
-			<label for="CKG_MTH_NM">방법 *</label> <input type="text"
-				name="CKG_MTH_NM" id="CKG_MTH_NM">
-		</div>
-		<div class="form-group">
-			<label for="CKG_SIT_NM">상황 *</label> <input type="text"
-				name="CKG_SIT_NM" id="CKG_SIT_NM">
-		</div>
+		<form th:action="@{/list/register}" method="post"
+			enctype="multipart/form-data">
+			<!-- 제목 -->
+			<div class="form-group">
+				<label for="title">레시피 제목</label> <input type="text" id="title"
+					name="title" placeholder="예) 된장찌개">
+			</div>
 
-		<ul class="recipe-steps">
-			<li class="form-group"><label for="step1">레시피 1</label> <input
-				type="text" name="step1" id="step1"></li>
-			<li class="form-group"><label for="step2">레시피 2</label> <input
-				type="text" name="step2" id="step2"></li>
-			<li class="form-group"><label for="step3">레시피 3</label> <input
-				type="text" name="step3" id="step3"></li>
-			<li class="form-group"><label for="step4">레시피 4</label> <input
-				type="text" name="step4" id="step4"></li>
-			<li class="form-group"><label for="step5">레시피 5</label> <input
-				type="text" name="step5" id="step5"></li>
-			<li class="form-group"><label for="step6">레시피 6</label> <input
-				type="text" name="step6" id="step6"></li>
-			<li class="form-group"><label for="step7">레시피 7</label> <input
-				type="text" name="step7" id="step7"></li>
-			<li class="form-group"><label for="step8">레시피 8</label> <input
-				type="text" name="step8" id="step8"></li>
-			<li class="form-group"><label for="step9">레시피 9</label> <input
-				type="text" name="step9" id="step9"></li>
-			<li class="form-group"><label for="step10">레시피 10</label> <input
-				type="text" name="step10" id="step10"></li>
-			<li class="form-group"><label for="step11">레시피 11</label> <input
-				type="text" name="step11" id="step11"></li>
-			<li class="form-group"><label for="step12">레시피 12</label> <input
-				type="text" name="step12" id="step12"></li>
-			<li class="form-group"><label for="step13">레시피 13</label> <input
-				type="text" name="step13" id="step13"></li>
-			<li class="form-group"><label for="step14">레시피 14</label> <input
-				type="text" name="step14" id="step14"></li>
-			<li class="form-group"><label for="step15">레시피 15</label> <input
-				type="text" name="step15" id="step15"></li>
-			<li class="form-group"><label for="step16">레시피 16</label> <input
-				type="text" name="step16" id="step16"></li>
-			<li class="form-group"><label for="step17">레시피 17</label> <input
-				type="text" name="step17" id="step17"></li>
-			<li class="form-group"><label for="step18">레시피 18</label> <input
-				type="text" name="step18" id="step18"></li>
-			<li class="form-group"><label for="step19">레시피 19</label> <input
-				type="text" name="step19" id="step19"></li>
-			<li class="form-group"><label for="step20">레시피 20</label> <input
-				type="text" name="step20" id="step20"></li>
-		</ul>
+			<!-- 재료 그룹 -->
+			<section>
+				<h2>재료</h2>
+				<div id="materialGroupContainer">
+					<div class="material-group">
+						<div class="material-list">
+							<div class="material-row">
+								<input type="text" name="material_name[]" placeholder="재료명">
+								<input type="text" name="material_amount[]"
+									placeholder="수량 (예: 100g)">
+								<button type="button" onclick="removeRow(this)">-</button>
+							</div>
+						</div>
+						<button type="button" id="btnAddMaterialRow" class="add-button">+
+							재료 추가</button>
+					</div>
+				</div>
+			</section>
 
-		<div class="form-actions">
-			<button type="submit" class="btn btn-submit">등록</button>
-			<button type="button" class="btn btn-cancel" onclick="history.back()">취소</button>
-		</div>
-	</form>
+
+			<!-- 요리 순서 -->
+			<section>
+				<h2>요리 순서</h2>
+				<div id="stepContainer">
+					<div class="step-item">
+						<label>Step 1</label>
+						<textarea name="step_text[]" placeholder="예) 양파를 썰어주세요."></textarea>
+						<input type="file" name="step_photo_1[]" multiple>
+					</div>
+				</div>
+				<button type="button" id="btnAddStep">+ 요리 순서 추가</button>
+			</section>
+
+			<!-- 요리 팁 -->
+			<section>
+				<h2>요리 팁 / 주의사항</h2>
+				<textarea name="cok_tip" placeholder="예) 소금보다 설탕을 먼저 넣어야 육질이 부드러워요."
+					rows="5" style="width: 100%; resize: none;"></textarea>
+			</section>
+
+			<!-- 완성 사진 -->
+			<section>
+				<h2>완성 사진</h2>
+				<input type="file" name="complete_photos" multiple>
+			</section>
+
+			<!-- 버튼 -->
+			<div class="regi2_btn3">
+				<div class="regi2_btn3_in">
+					<a href="javascript:void(0);" onclick="history.back();"
+						class="regi2_btn3_cancel">작성취소</a>
+				</div>
+				<div class="regi2_btn3_in">
+					<a href="javascript:void(0);" onclick="doSubmit('save')"
+						class="regi2_btn3_save">저장하기</a> <a href="javascript:void(0);"
+						onclick="doSubmit('save_public')" class="regi2_btn3_open">저장 후
+						공개하기</a>
+				</div>
+			</div>
+		</form>
+		<script th:src="@{/js/register.js}" layout:fragment="scripts"></script>
+	</div>
+
+	<!-- 스크립트 삽입 -->
+
 </body>
 </html>

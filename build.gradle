@@ -34,6 +34,8 @@ dependencies {
     implementation 'com.oracle.database.jdbc:ojdbc8:19.19.0.0'
     implementation 'com.sun.mail:javax.mail:1.6.2'
     implementation 'commons-fileupload:commons-fileupload:1.5'
+    implementation 'com.cloudinary:cloudinary-http44:1.33.0'
+    implementation 'org.postgresql:postgresql:42.7.2'
     
     // JSP 관련 의존성
     //implementation 'org.apache.tomcat.embed:tomcat-embed-jasper'

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Cloudinary 업로드 테스트</title>
+</head>
+<body>
+    <h1>이미지 업로드</h1>
+    <form action="/cloudinary/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*">
+        <button type="submit">업로드</button>
+    </form>
+</body>
+</html>
