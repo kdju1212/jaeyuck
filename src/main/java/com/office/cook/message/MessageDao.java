@@ -131,8 +131,8 @@ public class MessageDao {
 		}
 
 		// message 테이블에 데이터 삽입
-		String sql = "INSERT INTO message (message_no, send_id_no, get_id_no, send_id_name, get_id_name, send_id, get_id,title, content, send_date) "
-				+ "VALUES (message_seq.NEXTVAL, ?, ?, ?, ?, ?, ?, ?, ?, sysdate)";
+		String sql = "INSERT INTO message (message_no, send_id_no, get_id_no, send_id_name, get_id_name, send_id, get_id, title, content, send_date) "
+				+ "VALUES (nextval('message_seq'), ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
 
 		int result = -1;
 		try {

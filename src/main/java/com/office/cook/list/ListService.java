@@ -14,9 +14,9 @@ public class ListService {
 	/*
 	 * 요리 목록을 조회하는 메서드
 	 */
-	public List<ListVo> getCookList(int page, int pageSize) {
-
-		return listDao.getCookList(page, pageSize); // 데이터베이스에서 페이지에 맞는 데이터 반환
+	public List<RecipeVo> getCookList(int page, int pageSize) {
+		int offset = (page - 1) * pageSize;
+		return listDao.getCookList(offset, pageSize);
 	}
 
 	/*
@@ -26,19 +26,34 @@ public class ListService {
 		return listDao.getTotalCookCount(); // 전체 아이템 수를 반환
 	}
 
+	
+
 	/*
 	 * 요리 이름으로 상세 정보를 가져오는 메서드
 	 */
-	public ListVo getCookByName(int cook_no, String cookName) {
-		return listDao.getCookByName(cook_no, cookName);
+	public RecipeVo getCookByName(int recipeId, String title) {
+		RecipeVo recipe = listDao.getRecipeByIdAndName(recipeId, title);
+		if (recipe != null) {
+			recipe.setSteps(listDao.getRecipeSteps(recipeId));
+			recipe.setIngredients(listDao.getRecipeIngredients(recipeId));
+		}
+		return recipe;
+	}
+	
+	public RecipeVo getCookById(int recipeId) {
+		RecipeVo recipe = listDao.getRecipeById(recipeId);
+		if (recipe != null) {
+			recipe.setSteps(listDao.getRecipeSteps(recipeId));
+			recipe.setIngredients(listDao.getRecipeIngredients(recipeId));
+		}
+		return recipe;
 	}
 
 	/*
 	 * 북마크
 	 */
-	public int BookMark(String pageURL, String userid, String CKG_NM, int cook_no) {
-		// System.out.println("Service bookmark");
-		return listDao.BookMark(pageURL, userid, CKG_NM, cook_no);
+	public int BookMark(String pageUrl, String userid, String title, int recipeId) {
+		return listDao.insertBookmark(pageUrl, userid, title, recipeId);
 	}
 
 	/*
@@ -52,98 +67,118 @@ public class ListService {
 	/*
 	 * 조회수를 증가시키는 메서드
 	 */
-	public void incrementReadCount(String cookName, int cook_no) {
-		listDao.incrementReadCount(cookName, cook_no);
+	public void incrementReadCount(int recipeId) {
+		listDao.incrementReadCount(recipeId);
 	}
 
 	/*
 	 * 조회수 순 상위 10개 요리 가져오기
 	 */
-	public List<ListVo> getTopCooksByReadCount() {
+	public List<RecipeVo> getTopCooksByReadCount() {
 		return listDao.getTopCooksByReadCount();
-	}
-
-	/*
-	 * 요리 이름 검색
-	 */
-	public List<ListVo> searchCooksByName(String word) {
-		return listDao.searchCooksByName(word);
 	}
 
 	/*
 	 * 사용자 ID로 북마크 목록을 가져오는 메서드
 	 */
-	public List<ListVo> getBookmarks(String userId) {
-		return listDao.getBookmarks(userId);
+	public List<RecipeVo> getBookmarks(String userid) {
+		return listDao.getBookmarks(userid);
 	}
 
 	/*
 	 * 레시피 등록 메소드
 	 */
-	public void registerRecipe(ListVo recipe) {
-		listDao.insertRecipe(recipe);
+	public void registerRecipe(RecipeVo recipe) {
+		// 1. 레시피 정보 저장 → recipe_id 반환
+		int recipeId = listDao.insertRecipe(recipe);
+
+		// 2. 재료 저장
+		for (RecipeIngredientVo ing : recipe.getIngredients()) {
+			ing.setRecipeId(recipeId);
+			listDao.insertIngredient(ing);
+		}
+
+		// 3. 단계 저장
+		for (RecipeStepVo step : recipe.getSteps()) {
+			step.setRecipeId(recipeId);
+			listDao.insertStep(step);
+		}
 	}
 
 	/*
 	 * 레시피 목록을 조회하는 메서드
 	 */
-	public List<ListVo> getRecipeList() {
+	public List<RecipeVo> getRecipeList() {
 		return listDao.getRecipeList();
 	}
 
-	/*
-	 * 요리 이름으로 상세 정보를 가져오는 메서드
-	 */
-	public ListVo getRecipeByName(String cookName, int recipe_no) {
-		return listDao.getRecipeByName(cookName, recipe_no);
+	public RecipeVo getRecipeById(int recipeId) {
+		return listDao.getRecipeById(recipeId);
 	}
 
-	/*
-	 * 레시피 등록 메소드
-	 */
-	public void adminRegisterRecipe(ListVo recipe) {
-		listDao.adminInsertRecipe(recipe);
+	public List<RecipeStepVo> getStepsByRecipeId(int recipeId) {
+		return listDao.getStepsByRecipeId(recipeId);
 	}
 
-	/*
-	 * 레시피 등록 페이지에서 삭제
-	 */
-	public boolean deleteRecipeByName(String cookName, int recipe_no) {
+	public List<RecipeIngredientVo> getIngredientsByRecipeId(int recipeId) {
+		return listDao.getIngredientsByRecipeId(recipeId);
+	}
+
+	public boolean deleteRecipeById(int recipeId) {
 		try {
-			return listDao.deleteRecipeByName(cookName, recipe_no); // DAO 메서드를 호출하여 삭제 처리
+			return listDao.deleteRecipeById(recipeId) > 0;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return false; // 예외 발생 시 false 반환
+			return false;
 		}
-	}
-
-	/*
-	 * 레시피 상세 정보에서 삭제
-	 */
-	public boolean deleteCookByName(int cook_no, String cookName) {
-		int result = listDao.deleteCookByName(cook_no, cookName);
-		return result > 0; // 삭제 성공 여부 반환
 	}
 
 	/*
 	 * 레시피 수정
 	 */
-	public boolean updateCooks(String oldName, ListVo cook) {
-		int rowsAffected = listDao.updateCooks(oldName, cook);
-		return rowsAffected > 0;
+	public boolean updateRecipe(RecipeVo recipe) {
+		try {
+			// 1. 기본 정보 수정
+			int updated = listDao.updateRecipe(recipe);
+
+			// 2. 재료 삭제 후 재등록
+			listDao.deleteIngredientsByRecipeId(recipe.getRecipeId());
+			for (RecipeIngredientVo ing : recipe.getIngredients()) {
+				listDao.insertIngredient(ing);
+			}
+
+			// 3. 단계 삭제 후 재등록
+			listDao.deleteStepsByRecipeId(recipe.getRecipeId());
+			for (RecipeStepVo step : recipe.getSteps()) {
+				listDao.insertStep(step);
+			}
+
+			return updated > 0;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	/*
-	 *  카테고리별로 레시피 목록을 페이지네이션하여 가져오기
+	 * 카테고리별로 레시피 목록을 페이지네이션하여 가져오기
 	 */
-	public List<ListVo> getCookListByCategory(String category, int page, int pageSize) {
-		return listDao.findCooksByCategoryWithPagination(category, page, pageSize);
+	public List<RecipeVo> getRecipesByCategory(String category, int page, int pageSize) {
+		int offset = (page - 1) * pageSize;
+		return listDao.getRecipesByCategory(category, offset, pageSize);
 	}
 
 	/*
-	 *  카테고리별로 레시피 총 개수
+	 * 카테고리별로 레시피 총 개수
 	 */
-	public int getTotalCookCountByCategory(String category) {
-		return listDao.findTotalCookCountByCategory(category);
+	public int getTotalRecipeCountByCategory(String category) {
+		return listDao.getTotalRecipeCountByCategory(category);
+	}
+
+	/*
+	 * 요리 이름 검색
+	 */
+	public List<RecipeVo> searchCooksByName(String keyword) {
+		return listDao.searchCooksByName(keyword);
 	}
 }

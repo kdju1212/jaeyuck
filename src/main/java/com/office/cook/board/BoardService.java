@@ -14,17 +14,25 @@ public class BoardService {
 	/*
 	 * 특정 요리 이름에 대한 댓글 목록을 조회
 	 */
-	public List<BoardVo> getCommentsByCookName(String cookName, int cook_no, int offset, int pageSize) {
+//	public List<BoardVo> getCommentsByCookName(String cookName, int cook_no, int offset, int pageSize) {
+//		// 댓글 목록을 페이지네이션 적용해서 가져오기
+//		return boardDao.getCommentsByCookName(cookName, cook_no, offset, pageSize);
+//	}
+	public List<BoardVo> getCommentsByCookId(int cook_no, int offset, int pageSize) {
 		// 댓글 목록을 페이지네이션 적용해서 가져오기
-		return boardDao.getCommentsByCookName(cookName, cook_no, offset, pageSize);
+		return boardDao.getCommentsByCookId(cook_no, offset, pageSize);
 	}
 
 	/*
 	 * 댓글 개수
 	 */
-	public int getTotalCommentsCount(String cookName, int cook_no) {
+//	public int getTotalCommentsCount(String cookName, int cook_no) {
+//
+//		return boardDao.getTotalCommentsCount(cookName, cook_no);
+//	}
+	public int getTotalCommentsCount(int cook_no) {
 
-		return boardDao.getTotalCommentsCount(cookName, cook_no);
+		return boardDao.getTotalCommentsCount(cook_no);
 	}
 
 	/*

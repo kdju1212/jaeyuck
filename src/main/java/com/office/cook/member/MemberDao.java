@@ -40,31 +40,30 @@ public class MemberDao {
 	 * user 정보 불러오기 (로그인)
 	 */
 	public MemberVo selectUser(MemberVo memberVo) {
-	    String sql = "SELECT * FROM member WHERE userid = ?";
-	    List<MemberVo> memberVos = null;
+		String sql = "SELECT * FROM member WHERE userid = ?";
+		List<MemberVo> memberVos = null;
 
-	    try {
-	        RowMapper<MemberVo> rowMapper = BeanPropertyRowMapper.newInstance(MemberVo.class);
-	        memberVos = jdbcTemplate.query(sql, rowMapper, memberVo.getUserid());
+		try {
+			RowMapper<MemberVo> rowMapper = BeanPropertyRowMapper.newInstance(MemberVo.class);
+			memberVos = jdbcTemplate.query(sql, rowMapper, memberVo.getUserid());
 
-	        if (memberVos.isEmpty()) {
-	            return null;
-	        }
+			if (memberVos.isEmpty()) {
+				return null;
+			}
 
-	        // 비밀번호 검증
-	        MemberVo dbMember = memberVos.get(0);
-	        if (!passwordEncoder.matches(memberVo.getPwd(), dbMember.getPwd())) {
-	            return null;
-	        }
+			// 비밀번호 검증
+			MemberVo dbMember = memberVos.get(0);
+			if (!passwordEncoder.matches(memberVo.getPwd(), dbMember.getPwd())) {
+				return null;
+			}
 
-	        return dbMember;
+			return dbMember;
 
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return null;
-	    }
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
-
 
 	/*
 	 * userid로만 user 정보 불러오기
@@ -95,8 +94,8 @@ public class MemberDao {
 	public int insertUserAccount(MemberVo memberVo) {
 
 		// reg_date와 mod_date는 NOW()로 자동 입력되므로 ? 파라미터에서 제외
-		String sql = "INSERT INTO member(user_no,name, userid, pwd, email, phone, admin, gender, reg_date, mod_date) "
-				+ "VALUES(user_seq.NEXTVAL,?, ?, ?, ?, ?, ?, ?, SYSDATE, SYSDATE)";
+		String sql = "INSERT INTO member(name, userid, pwd, email, phone, admin, gender, reg_date, mod_date) "
+				+ "VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_DATE, CURRENT_DATE)";
 
 		int result = -1;
 
@@ -118,7 +117,7 @@ public class MemberDao {
 	public int memberUpdateAccount(MemberVo memberVo) {
 
 		String sql = "UPDATE member SET name = ?, " + "email = ?, " + "phone = ?, " + "gender = ?, "
-				+ "mod_date = SYSDATE " + "WHERE userid = ?";
+				+ "mod_date = CURRENT_DATE " + "WHERE userid = ?";
 
 		int result = -1;
 
@@ -200,7 +199,7 @@ public class MemberDao {
 	 */
 	public int memberPwdUpdateConfirm(MemberVo memberVo, String new_pwd) {
 
-		String sql = "update member set pwd = ?,mod_date = SYSDATE where userid = ?";
+		String sql = "UPDATE member SET pwd = ?, mod_date = CURRENT_TIMESTAMP WHERE userid = ?";
 
 		int result = -1;
 		try {
@@ -238,12 +237,14 @@ public class MemberDao {
 	}
 
 	/*
-	 * 초기화된것으로 비밀번호 변경 
+	 * 초기화된것으로 비밀번호 변경
 	 */
 	public int updatePassword(String userid, String newPassword) {
 
-		String sql = "update member SET pwd = ?, mod_date = sysdate WHERE userid = ?";
+		//String sql = "update member SET pwd = ?, mod_date = sysdate WHERE userid = ?";
+		String sql = "UPDATE member SET pwd = ?, mod_date = CURRENT_TIMESTAMP WHERE userid = ?";
 
+		
 		int result = -1;
 
 		try {

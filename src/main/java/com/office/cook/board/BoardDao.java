@@ -18,42 +18,57 @@ public class BoardDao {
 	/*
 	 * 요리이름으로 댓글 찾기
 	 */
-	public List<BoardVo> getCommentsByCookName(String cookName, int cook_no, int offset, int pageSize) {
-		// 페이지네이션과 좋아요/싫어요 카운트가 포함된 SQL 쿼리
-		String sql = "SELECT * FROM (" + "  SELECT b.board_no, b.cook_no, b.userid, b.CKG_NM, b.content, "
-				+ "    COUNT(CASE WHEN l.liked = '1' THEN 1 END) AS like_count, "
-				+ "    COUNT(CASE WHEN l.disliked = '1' THEN 1 END) AS dislike_count, " + "    b.write_date, "
-				+ "    ROW_NUMBER() OVER (ORDER BY b.write_date DESC) AS row_num " + "  FROM CookBoard b "
-				+ "  LEFT JOIN CookBoardLike l ON b.board_no = l.board_no AND b.CKG_NM = l.CKG_NM "
-				+ "  WHERE b.CKG_NM = ? AND b.cook_no = ? "
-				+ "  GROUP BY b.board_no, b.cook_no, b.userid, b.CKG_NM, b.content, b.write_date "
-				+ ") WHERE row_num BETWEEN ? AND ?";
+//	public List<BoardVo> getCommentsByCookName(String cookName, int cook_no, int offset, int pageSize) {
+//		// 페이지네이션과 좋아요/싫어요 카운트가 포함된 SQL 쿼리
+//		String sql = "SELECT * FROM (" + "  SELECT b.board_no, b.cook_no, b.userid, b.CKG_NM, b.content, "
+//				+ "    COUNT(CASE WHEN l.liked = '1' THEN 1 END) AS like_count, "
+//				+ "    COUNT(CASE WHEN l.disliked = '1' THEN 1 END) AS dislike_count, " + "    b.write_date, "
+//				+ "    ROW_NUMBER() OVER (ORDER BY b.write_date DESC) AS row_num " + "  FROM CookBoard b "
+//				+ "  LEFT JOIN CookBoardLike l ON b.board_no = l.board_no AND b.CKG_NM = l.CKG_NM "
+//				+ "  WHERE b.CKG_NM = ? AND b.cook_no = ? "
+//				+ "  GROUP BY b.board_no, b.cook_no, b.userid, b.CKG_NM, b.content, b.write_date "
+//				+ ") WHERE row_num BETWEEN ? AND ?";
+//
+//		// RowMapper 설정
+//		RowMapper<BoardVo> rowMapper = new BeanPropertyRowMapper<>(BoardVo.class);
+//
+//		// 쿼리 실행: 댓글 목록 가져오기
+//		return jdbcTemplate.query(sql, new Object[] { cookName, cook_no, offset + 1, offset + pageSize }, rowMapper);
+//	}
+	public List<BoardVo> getCommentsByCookId(int recipeId, int offset, int pageSize) {
+		String sql = """
+				    SELECT * FROM (
+				        SELECT b.board_no, b.recipe_id, b.userid, b.ckg_nm, b.content,
+				               COUNT(CASE WHEN l.liked = '1' THEN 1 END) AS like_count,
+				               COUNT(CASE WHEN l.disliked = '1' THEN 1 END) AS dislike_count,
+				               b.write_date,
+				               ROW_NUMBER() OVER (ORDER BY b.write_date DESC) AS row_num
+				        FROM cookboard b
+				        LEFT JOIN cookboardlike l ON b.board_no = l.board_no AND b.recipe_id = l.recipe_id
+				        WHERE b.recipe_id = ?
+				        GROUP BY b.board_no, b.recipe_id, b.userid, b.ckg_nm, b.content, b.write_date
+				    ) WHERE row_num BETWEEN ? AND ?
+				""";
 
-		// RowMapper 설정
 		RowMapper<BoardVo> rowMapper = new BeanPropertyRowMapper<>(BoardVo.class);
-
-		// 쿼리 실행: 댓글 목록 가져오기
-		return jdbcTemplate.query(sql, new Object[] { cookName, cook_no, offset + 1, offset + pageSize }, rowMapper);
+		return jdbcTemplate.query(sql, new Object[] { recipeId, offset + 1, offset + pageSize }, rowMapper);
 	}
 
 	/*
 	 * 댓글 개수
 	 */
-	public int getTotalCommentsCount(String cookName, int cook_no) {
-		// 올바른 SQL 쿼리: COUNT(*) 사용
-		String sql = "SELECT COUNT(*) FROM cookboard WHERE cook_no = ? AND CKG_NM = ?";
-
-		// queryForObject를 사용하여 단일 값(카운트)을 가져옴
-		int result = jdbcTemplate.queryForObject(sql, Integer.class, cook_no, cookName);
-
-		return result;
+	public int getTotalCommentsCount(int recipeId) {
+		String sql = "SELECT COUNT(*) FROM cookboard WHERE recipe_id = ?";
+		return jdbcTemplate.queryForObject(sql, Integer.class, recipeId);
 	}
 
 	/*
 	 * 댓글을 추가하는 쿼리
 	 */
 	public void insertComment(BoardVo comment) {
-		String sql = "INSERT INTO CookBoard (board_no, cook_no, CKG_NM, userid, content, write_date) VALUES (cookBoard_seq.NEXTVAL, ?, ?, ?, ?, SYSDATE)";
+		String sql = "INSERT INTO CookBoard (board_no, cook_no, CKG_NM, userid, content, write_date) "
+				+ "VALUES (nextval('cookBoard_seq'), ?, ?, ?, ?, CURRENT_TIMESTAMP)";
+
 		jdbcTemplate.update(sql, comment.getCook_no(), comment.getCKG_NM(), comment.getUserid(), comment.getContent());
 	}
 
@@ -120,7 +135,9 @@ public class BoardDao {
 		}
 
 		// 좋아요가 없으면 생성
-		String insertSql = "INSERT INTO CookBoardLike (board_no,CKG_NM, content, userid , Like_id,Liked,liked_date) VALUES (?,?, ?, ?,?,1,SYSDATE)";
+		String insertSql = "INSERT INTO CookBoardLike (board_no, CKG_NM, content, userid, like_id, liked, liked_date) "
+				+ "VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)";
+
 		int rowsAffected = jdbcTemplate.update(insertSql, likeVo.getBoard_no(), likeVo.getCKG_NM(), likeVo.getContent(),
 				likeVo.getUserid(), likeVo.getLike_id());
 
@@ -165,7 +182,9 @@ public class BoardDao {
 		}
 
 		// 싫어요가 없으면 생성
-		String insertSql = "INSERT INTO CookBoardLike (board_no ,CKG_NM, content, userid , Like_id,disLiked,liked_date) VALUES (?,?, ?, ?,?,1,SYSDATE)";
+		String insertSql = "INSERT INTO CookBoardLike (board_no, CKG_NM, content, userid, like_id, disliked, liked_date) "
+				+ "VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)";
+
 		int rowsAffected = jdbcTemplate.update(insertSql, likeVo.getBoard_no(), likeVo.getCKG_NM(), likeVo.getContent(),
 				likeVo.getUserid(), likeVo.getLike_id());
 

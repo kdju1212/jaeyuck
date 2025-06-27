@@ -16,25 +16,30 @@
 		<div style="margin-top: 20px;"></div>
 
 		<div th:replace="~{search/search :: searchBar}"></div>
-		<div th:if="${#lists.isEmpty(cookList)}">
+
+		<!-- 레시피가 없을 경우 -->
+		<div th:if="${#lists.isEmpty(recipeList)}">
 			<h1 style="text-align: center;">등록된 레시피가 없습니다.</h1>
 		</div>
 
-		<div th:if="${!#lists.isEmpty(cookList)}">
+		<!-- 레시피가 있을 경우 -->
+		<div th:if="${!#lists.isEmpty(recipeList)}">
 			<div class="cook-list">
-				<div th:each="cook : ${cookList}" class="cook-item clickable"
-					th:onclick="'redirectToInfo(' + ${cook.cook_no} + ', \'' + ${cook.CKG_NM} + '\')'">
+				<div th:each="recipe : ${recipeList}" class="cook-item clickable"
+					th:onclick="'redirectToInfo(' + ${recipe.recipeId} + ')'">
+
 					<div class="cook-image">
-						<img th:src="@{'/libraryUploadImg/' + ${cook.CKG_IMG_URL}}"
-							th:alt="${cook.CKG_NM}">
+						<img th:src="${recipe.completeImgUrl}" th:alt="${recipe.title}">
+
 					</div>
 					<div class="cook-info">
-						<div class="cook-name" th:text="${cook.CKG_NM}"></div>
-						<div class="read-count" th:text="${cook.read_count + ' views'}"></div>
+						<div class="cook-name" th:text="${recipe.title}"></div>
+						<!-- <div class="read-count" th:text="${recipe.readCount + ' views'}"></div> -->
 					</div>
 				</div>
 			</div>
 
+			<!-- 페이징 -->
 			<div class="pagination">
 				<a th:if="${currentPage > 1}" th:href="@{|?page=1|}">첫 페이지</a> <a
 					th:if="${currentPage > 1}" th:href="@{|?page=${currentPage - 1}|}">«
@@ -49,21 +54,19 @@
 			</div>
 		</div>
 
+		<!-- JS 영역 -->
 		<div th:fragment="scripts">
 			<script type="text/javascript" th:src="@{/js/member.js}"></script>
 			<script th:src="@{/js/list.js}"></script>
 			<script th:src="@{/js/search.js}"></script>
 			<script th:inline="javascript">
 				var contextPath = /*[[@{/}]]*/'';
-				function redirectToInfo(cookNo, ckgNm) {
-					window.location.href = contextPath + 'list/info?cook_no='
-							+ cookNo;
+				function redirectToInfo(recipeNo) {
+					window.location.href ='/list/details?recipeId='
+							+ recipeNo;
 				}
 			</script>
 		</div>
-
 	</div>
-
 </body>
-
 </html>
