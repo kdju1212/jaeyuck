@@ -1,60 +1,66 @@
 <!DOCTYPE html>
-<html lang="ko"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/base}">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout/base}">
 <head>
-    <title>분류 페이지</title>
-    
-    <!-- 페이지 전용 CSS -->
-    <link rel="stylesheet" th:href="@{/css/list.css}" layout:fragment="styles">
+<title>분류 페이지</title>
+
+<link rel="stylesheet" th:href="@{/css/list.css}"
+	layout:fragment="styles">
 </head>
 
 <body>
-<div layout:fragment="content">
-    <div style="margin-top: 20px;"></div>
+	<div layout:fragment="content">
+		<div style="margin-top: 20px;"></div>
 
-    <div th:if="${#lists.isEmpty(cookList)}">
-        <div class="blank_bottom"></div>
-        <h1 style="text-align: center;">등록된 레시피가 없습니다.</h1>
-    </div>
+		<div th:if="${#lists.isEmpty(cookList)}">
+			<div class="blank_bottom"></div>
+			<h1 style="text-align: center;">등록된 레시피가 없습니다.</h1>
+		</div>
 
-    <div th:if="${!#lists.isEmpty(cookList)}">
-        <div class="cook-list">
-            <div th:each="cook : ${cookList}" class="cook-item clickable"
-                 th:onclick="'redirectToInfo(' + ${cook.cook_no} + ', \'' + ${cook.CKG_NM} + '\')'">
-                <div class="cook-image">
-                    <img th:src="@{'/libraryUploadImg/' + ${cook.CKG_IMG_URL}}" th:alt="${cook.CKG_NM}">
-                </div>
-                <div class="cook-info">
-                    <div class="cook-name" th:text="${cook.CKG_NM}"></div>
-                    <div class="read-count" th:text="${cook.read_count + ' views'}"></div>
-                </div>
-            </div>
-        </div>
+		<div th:if="${!#lists.isEmpty(cookList)}">
+			<div class="cook-list">
+				<div th:each="cook : ${cookList}" class="cook-item clickable"
+					th:data-recipe-id="${cook.recipeId}"
+					th:data-recipe-title="${cook.title}"
+					th:onclick="'redirectToInfo(' + ${cook.recipeId} + ')'">
+					<div class="cook-image">
+						<img th:src="${cook.completeImgUrl}" th:alt="${cook.title}">
+					</div>
+					<div class="cook-info">
+						<div class="cook-name" th:text="${cook.title}"></div>
+						<!-- <div class="read-count" th:text="${cook.readCount + ' views'}"></div> -->
+					</div>
+				</div>
+			</div>
 
-        <div class="pagination">
-            <a th:if="${currentPage > 1}"
-               th:href="@{|/list/filter(category=${category}, page=1, pageSize=${pageSize})|}">첫 페이지</a>
-            <a th:if="${currentPage > 1}"
-               th:href="@{|/list/filter(category=${category}, page=${currentPage - 1}, pageSize=${pageSize})|}">« 이전</a>
+			<div class="pagination">
+				<a th:if="${currentPage > 1}"
+					th:href="@{|/list/filter(category=${category}, page=1, pageSize=${pageSize})|}">첫
+					페이지</a> <a th:if="${currentPage > 1}"
+					th:href="@{|/list/filter(category=${category}, page=${currentPage - 1}, pageSize=${pageSize})|}">«
+					이전</a> <span th:each="i : ${#numbers.sequence(1, totalPage)}"> <span
+					th:if="${i == currentPage}" class="current" th:text="${i}"></span>
+					<a th:if="${i != currentPage}"
+					th:href="@{|/list/filter(category=${category}, page=${i}, pageSize=${pageSize})|}"
+					th:text="${i}"></a>
+				</span> <a th:if="${currentPage < totalPage}"
+					th:href="@{|/list/filter(category=${category}, page=${currentPage + 1}, pageSize=${pageSize})|}">다음
+					»</a> <a th:if="${currentPage < totalPage}"
+					th:href="@{|/list/filter(category=${category}, page=${totalPage}, pageSize=${pageSize})|}">마지막
+					페이지</a>
+			</div>
+		</div>
+		<script th:src="@{/js/list.js}" layout:fragment="scripts"></script>
+		<script th:inline="javascript">
+			var contextPath = /*[[@{/}]]*/'';
+			function redirectToInfo(recipeNo) {
+				window.location.href = '/list/details?recipeId=' + recipeNo;
+			}
+		</script>
+	</div>
 
-            <span th:each="i : ${#numbers.sequence(1, totalPage)}">
-                <span th:if="${i == currentPage}" class="current" th:text="${i}"></span>
-                <a th:if="${i != currentPage}"
-                   th:href="@{|/list/filter(category=${category}, page=${i}, pageSize=${pageSize})|}"
-                   th:text="${i}"></a>
-            </span>
 
-            <a th:if="${currentPage < totalPage}"
-               th:href="@{|/list/filter(category=${category}, page=${currentPage + 1}, pageSize=${pageSize})|}">다음 »</a>
-            <a th:if="${currentPage < totalPage}"
-               th:href="@{|/list/filter(category=${category}, page=${totalPage}, pageSize=${pageSize})|}">마지막 페이지</a>
-        </div>
-    </div>
-</div>
 
-<!-- 페이지 전용 JS -->
-<script th:src="@{/js/list.js}" layout:fragment="scripts"></script>
 </body>
 </html>

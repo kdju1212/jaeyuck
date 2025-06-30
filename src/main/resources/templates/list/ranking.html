@@ -10,31 +10,32 @@
 <body>
 	<div layout:fragment="content">
 		<div style="margin-top: 20px;"></div>
+
 		<div th:if="${#lists.isEmpty(cookList)}">
 			<h1 style="text-align: center;">등록된 레시피가 없습니다.</h1>
 		</div>
+
 		<div th:if="${!#lists.isEmpty(cookList)}">
 			<div class="cook-list-ranking">
 				<div th:each="cook : ${cookList}" class="cook-item clickable"
-					th:onclick="'redirectToInfo(' + ${cook.cook_no} + ', \'' + ${cook.CKG_NM} + '\')'">
+					th:data-recipe-id="${cook.recipeId}"
+					th:data-recipe-title="${cook.title}">
 					<div class="cook-image">
-						<img th:src="@{'/libraryUploadImg/' + ${cook.CKG_IMG_URL}}"
-							th:alt="${cook.CKG_NM}">
+						<img th:src="${cook.completeImgUrl}" th:alt="${cook.title}">
 					</div>
 					<div class="cook-info">
-						<div class="cook-name" th:text="${cook.CKG_NM}"></div>
-						<div class="read-count" th:text="${cook.read_count + ' views'}"></div>
+						<div class="cook-name" th:text="${cook.title}"></div>
+						<!-- <div class="read-count" th:text="${cook.read_count + ' views'}"></div> -->
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 
-	<script layout:fragment="scripts">
-		// redirectToInfo 함수는 해당 페이지 또는 공통 JS 파일에 정의되어 있어야 합니다.
-		function redirectToInfo(cookNo, ckgNm) {
-			// 예시: 해당 레시피의 상세 페이지로 이동
-			window.location.href = '/list/info?cook_no=' + cookNo;
+	<script th:inline="javascript">
+		var contextPath = /*[[@{/}]]*/'';
+		function redirectToInfo(recipeNo) {
+			window.location.href = '/list/details?recipeId=' + recipeNo;
 		}
 	</script>
 </body>

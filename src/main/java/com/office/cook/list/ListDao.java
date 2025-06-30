@@ -97,10 +97,13 @@ public class ListDao {
 	 */
 	// 1. 레시피 기본 정보 저장
 	public int insertRecipe(RecipeVo recipe) {
-		String sql = "INSERT INTO recipe (title, kind, tip, complete_img_url) VALUES (?, ?, ?, ?) RETURNING recipe_id";
-		return jdbcTemplate.queryForObject(sql,
-				new Object[] { recipe.getTitle(), recipe.getKind(), recipe.getTip(), recipe.getCompleteImgUrl() },
-				Integer.class);
+		// ✨ 변경된 SQL: userid 컬럼 추가 ✨
+		String sql = "INSERT INTO recipe (title, kind, tip, complete_img_url, userid) VALUES (?, ?, ?, ?, ?) RETURNING recipe_id";
+
+		// ✨ 변경된 파라미터: recipe.getUserid() 추가 ✨
+		return jdbcTemplate.queryForObject(sql, new Object[] { recipe.getTitle(), recipe.getKind(), recipe.getTip(),
+				recipe.getCompleteImgUrl(), recipe.getUserid() // ✨ 여기에 userid 값을 추가합니다! ✨
+		}, Integer.class);
 	}
 
 	/*

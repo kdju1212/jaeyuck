@@ -12,9 +12,11 @@
 
 <body>
 	<div layout:fragment="content">
+		<input type="hidden" id="loggedInUserId"
+			th:value="${loginedMemberVo?.userid ?: ''}">
+
 		<div class="blank_bottom"></div>
 
-		<!-- 관리자용 수정/삭제 -->
 		<div class="form-actions">
 			<div
 				th:if="${not #strings.isEmpty(loginedMemberVo?.userid) and loginedMemberVo.userid == 'admin'}">
@@ -33,7 +35,6 @@
 		<div class="cook-details-container">
 			<div class="cook-header">
 				<h1 class="cook-title" th:text="${recipe.title}"></h1>
-				<!-- <p class="cook-views" th:text="${recipe.readCount + ' views'}"></p> -->
 			</div>
 
 			<div class="cook-content">
@@ -51,67 +52,83 @@
 
 				<div class="cook-steps">
 					<h2>요리 순서</h2>
-					<ol>
-						<li th:each="step : ${steps}">
-							<p th:text="${step.description}"></p>
-							<div th:if="${step.stepImgUrl != null}">
-								<img th:src="@{${step.stepImgUrl}}" alt="요리 단계 이미지">
+					<ol class="recipe-steps-list">
+						<li th:each="step, iterStat : ${steps}" class="recipe-step-item">
+							<div class="step-image">
+								<img th:src="@{${step.stepImgUrl}}" alt="요리 단계 이미지" />
+							</div>
+							<div class="step-description">
+								<p>
+									<span class="step-number"
+										th:text="'STEP ' + ${iterStat.index + 1} + '.'"></span> <span
+										th:text="${step.description}"></span>
+								</p>
 							</div>
 						</li>
 					</ol>
 				</div>
+
 			</div>
 
-			<!-- 좋아요 / 북마크 -->
 			<div class="actions">
 				<form th:action="@{/list/toggleBookmark}" method="post">
 					<input type="hidden" name="recipeId" th:value="${recipe.recipeId}">
 					<button type="submit" class="bookmark-btn"
-						onclick="return checkLoginBeforeBookmark()">
+						onclick="return checkLogin()">
 						<img
 							th:src="@{${bookmarkExists != null and bookmarkExists} ? '/img/bookmarked.png' : '/img/bookmark.png'}"
 							alt="북마크">
-
-
 					</button>
 				</form>
 
 				<div class="like-dislike-section">
-					<form th:action="@{/list/incrementLike}" method="post">
-						<input type="hidden" name="recipeId" th:value="${recipe.recipeId}">
-						<input type="hidden" name="like_id"
-							th:value="${loginedMemberVo?.userid}"> <input
-							type="submit" value="좋아요"
-							onclick="return checkLoginBeforeComment()">
+					<form id="likeForm" method="post" action="javascript:void(0);">
+						<input type="hidden" name="recipe_id"
+							th:value="${recipe.recipeId}"> <input type="hidden"
+							name="userId" th:value="${loginedMemberVo?.userid}"> <input
+							type="hidden" name="ckg_nm" th:value="${recipe.title}"> <input
+							type="hidden" name="content" th:value="${recipe.title}">
+						<input type="hidden" name="comment_userid"
+							th:value="${recipe.userid}"> <input type="hidden"
+							name="reactionType" value="LIKE"> <input type="submit"
+							value="좋아요" class="reaction-button" data-reaction-type="LIKE">
 					</form>
-					<span class="like-count" th:text="${recipe.likeCount}"></span>
+					<span class="like-count"
+						th:id="'recipe-like-count-' + ${recipe.recipeId}"
+						th:text="${likeCount}">0</span>
 
-					<form th:action="@{/list/incrementDislike}" method="post">
-						<input type="hidden" name="recipeId" th:value="${recipe.recipeId}">
-						<input type="hidden" name="like_id"
-							th:value="${loginedMemberVo?.userid}"> <input
-							type="submit" value="싫어요"
-							onclick="return checkLoginBeforeComment()">
+					<form id="dislikeForm" method="post" action="javascript:void(0);">
+						<input type="hidden" name="recipe_id"
+							th:value="${recipe.recipeId}"> <input type="hidden"
+							name="userId" th:value="${loginedMemberVo?.userid}"> <input
+							type="hidden" name="ckg_nm" th:value="${recipe.title}"> <input
+							type="hidden" name="content" th:value="${recipe.title}">
+						<input type="hidden" name="comment_userid"
+							th:value="${recipe.userid}"> <input type="hidden"
+							name="reactionType" value="DISLIKE"> <input type="submit"
+							value="싫어요" class="reaction-button" data-reaction-type="DISLIKE">
 					</form>
-					<span class="dislike-count" th:text="${recipe.dislikeCount}"></span>
+					<span class="dislike-count"
+						th:id="'recipe-dislike-count-' + ${recipe.recipeId}"
+						th:text="${dislikeCount}">0</span>
 				</div>
+
 			</div>
 
-			<!-- 댓글 작성 -->
 			<div class="comment-section">
 				<h2>댓글</h2>
-				<form th:action="@{/board/insertComment}" method="post">
+				<form th:action="@{/board/addComment}" method="post">
 					<input type="hidden" name="recipeId" th:value="${recipe.recipeId}">
 					<input type="hidden" name="userid"
-						th:value="${loginedMemberVo?.userid}">
+						th:value="${loginedMemberVo?.userid}"> <input
+						type="hidden" name="ckg_nm" th:value="${recipe.title}">
 					<textarea name="content" placeholder="댓글을 입력하세요."
 						class="comment-textarea"></textarea>
 					<button type="submit" class="comment-submit-btn"
-						onclick="return checkLoginBeforeComment()">댓글 등록</button>
+						onclick="return checkLogin()">댓글 등록</button>
 				</form>
 			</div>
 
-			<!-- 댓글 목록 -->
 			<div class="comments-list-section">
 				<div th:if="${#lists.isEmpty(comments)}">
 					<p class="no-comments">아직 댓글이 없습니다.</p>
@@ -123,49 +140,80 @@
 								class="comment-date" th:text="${board.write_date}"></span>
 							<div th:if="${loginedMemberVo?.userid == board.userid}"
 								class="comment-actions">
+								<form th:action="@{/board/updateComment}" method="post"
+									class="update-comment-form">
+									<input type="hidden" name="board_no"
+										th:value="${board.board_no}"> <input type="hidden"
+										name="recipeId" th:value="${recipe.recipeId}"> <input
+										type="hidden" name="ckg_nm" th:value="${recipe.title}">
+									<input type="hidden" name="userid" th:value="${board.userid}">
+									<textarea name="new_content" class="comment-edit-textarea"
+										th:text="${board.content}" style="display: none;"></textarea>
+									<button type="button" class="edit-comment-btn">수정</button>
+									<button type="submit" class="save-comment-btn"
+										style="display: none;">저장</button>
+								</form>
 								<form th:action="@{/board/deleteComment}" method="post">
 									<input type="hidden" name="board_no"
 										th:value="${board.board_no}"> <input type="hidden"
-										name="recipeId" th:value="${recipe.recipeId}">
-									<button type="submit" class="delete-comment-btn"
-										onclick="return confirm('댓글을 삭제하시겠습니까?');">삭제</button>
+										name="recipeId" th:value="${recipe.recipeId}"> <input
+										type="hidden" name="ckg_nm" th:value="${recipe.title}">
+									<input type="submit" class="delete-comment-btn" value="삭제"
+										onclick="return confirm('댓글을 삭제하시겠습니까?');">
 								</form>
 							</div>
 						</div>
 						<p class="comment-content" th:text="${board.content}"></p>
 
 						<div class="comment-like-dislike">
-							<form th:action="@{/board/incrementLikeComment}" method="post">
-								<input type="hidden" name="board_no"
-									th:value="${board.board_no}"> <input type="hidden"
-									name="recipeId" th:value="${recipe.recipeId}"> <input
-									type="hidden" name="like_id"
-									th:value="${loginedMemberVo?.userid}"> <input
-									type="submit" value="좋아요"
-									onclick="return checkLoginBeforeComment()">
-							</form>
-							<span class="like-count" th:text="${board.likeCount}"></span>
+							<button type="button" class="reaction-button"
+								data-target-type="comment" th:data-board-no="${board.board_no}"
+								th:data-recipe-id="${recipe.recipeId}"
+								th:data-user-id="${loginedMemberVo?.userid}"
+								th:data-ckg-nm="${recipe.title}"
+								th:data-content="${board.content}"
+								th:data-comment-userid="${board.userid}"
+								data-reaction-type="LIKE">좋아요</button>
+							<span class="like-count"
+								th:id="'comment-like-count-' + ${board.board_no}"
+								th:text="${board.likeCount}"></span>
 
-							<form th:action="@{/board/incrementDislikeComment}" method="post">
-								<input type="hidden" name="board_no"
-									th:value="${board.board_no}"> <input type="hidden"
-									name="recipeId" th:value="${recipe.recipeId}"> <input
-									type="hidden" name="like_id"
-									th:value="${loginedMemberVo?.userid}"> <input
-									type="submit" value="싫어요"
-									onclick="return checkLoginBeforeComment()">
-							</form>
-							<span class="dislike-count" th:text="${board.dislikeCount}"></span>
+							<button type="button" class="reaction-button"
+								data-target-type="comment" th:data-board-no="${board.board_no}"
+								th:data-recipe-id="${recipe.recipeId}"
+								th:data-user-id="${loginedMemberVo?.userid}"
+								th:data-ckg-nm="${recipe.title}"
+								th:data-content="${board.content}"
+								th:data-comment-userid="${board.userid}"
+								data-reaction-type="DISLIKE">싫어요</button>
+							<span class="dislike-count"
+								th:id="'comment-dislike-count-' + ${board.board_no}"
+								th:text="${board.dislikeCount}"></span>
 						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-	</div>
 
-	<script layout:fragment="scripts" th:src="@{/js/board.js}"></script>
-	<script th:inline="javascript">
-		var contextPath = /*[[@{/}]]*/'';
-	</script>
+		<script layout:fragment="scripts">
+			// contextPath와 loginedUserId 전역 변수 초기화
+			var contextPath = /*[[@{/}]]*/'';
+			var loginedUserId = $('#loggedInUserId').val();
+
+			if (!loginedUserId || loginedUserId.trim() === '') {
+				loginedUserId = null;
+			}
+
+			// 디버깅을 위한 콘솔 로그 (개발자 도구에서 확인 가능)
+			console.log(
+					"recipe_details.html - contextPath (in scripts fragment):",
+					contextPath);
+			console
+					.log(
+							"recipe_details.html - loginedUserId (read from hidden input):",
+							loginedUserId);
+		</script>
+		<script layout:fragment="scripts" th:src="@{/js/board.js}" defer></script>
+	</div>
 </body>
 </html>

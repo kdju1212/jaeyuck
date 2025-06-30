@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-
 @Controller
 @RequestMapping("/member")
 public class MemberController {
@@ -62,6 +61,7 @@ public class MemberController {
 			nextPage = "member/Login";
 
 		} else {
+			System.out.println("DEBUG_LOGIN: 로그인 성공! 세션에 저장될 MemberVo의 userid: [" + loginedMemberVo.getUserid() + "]");
 			session.setAttribute("loginedMemberVo", loginedMemberVo);
 			session.setMaxInactiveInterval(60 * 30);
 

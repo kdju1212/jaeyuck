@@ -1,534 +1,709 @@
 @charset "UTF-8";
 
-/* 레시피 목록 전체 */
-.cook-list {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 30px; /* 항목 간의 간격을 넓힘 */
-	justify-content: center;
-	padding: 20px; /* 레시피 목록 주변 여백 추가 */
-	width: 75%; /* 부모 요소의 너비에 맞게 확장 */
-	height: auto; /* 높이는 내용에 맞춰 자동 조정 */
-	margin-left: 12.5%;
-	margin-right: 12.5%;
+/* --- 전체 레이아웃 및 공통 스타일 --- */
+body {
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	background-color: #f8f9fa;
+	color: #333;
+	line-height: 1.6;
 }
 
-/* 개별 레시피 항목 */
+.blank_bottom {
+	height: 20px; /* 섹션 간 여백 */
+	margin-bottom: 10px;
+}
+
+/* --- 버튼 공통 스타일 --- */
+.action-button {
+	padding: 10px 20px;
+	font-size: 16px;
+	font-weight: bold;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background-color 0.2s ease, transform 0.2s ease;
+	margin: 5px; /* 버튼 간 여백 */
+}
+
+.action-button:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.action-button.primary { /* 일반적인 긍정적 액션 (예: 등록, 수정) */
+	background-color: #007bff;
+	color: white;
+}
+
+.action-button.primary:hover {
+	background-color: #0056b3;
+}
+
+.action-button.danger { /* 삭제, 경고 액션 */
+	background-color: #dc3545;
+	color: white;
+}
+
+.action-button.danger:hover {
+	background-color: #c82333;
+}
+
+.action-button.success { /* 좋아요 버튼 등 */
+	background-color: #28a745;
+	color: white;
+}
+
+.action-button.success:hover {
+	background-color: #218838;
+}
+
+.action-button.info { /* 싫어요 버튼 등 */
+	background-color: #17a2b8;
+	color: white;
+}
+
+.action-button.info:hover {
+	background-color: #138496;
+}
+
+/* --- 레시피 목록 (list.html) --- */
+.cook-list, .cook-list-ranking {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 25px; /* 항목 간 간격 */
+	justify-content: center;
+	padding: 20px 0;
+	max-width: 1200px; /* 최대 너비 설정 */
+	margin: 20px auto; /* 중앙 정렬 */
+}
+
 .cook-item {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	width: 200px; /* 각 항목의 너비를 늘림 */
-	height: 300px; /* 각 항목의 높이를 늘림 */
+	width: 220px; /* 각 항목 너비 */
+	height: 320px; /* 각 항목 높이 */
 	text-align: center;
-	border: 1px solid #ddd;
-	padding: 15px; /* 여백을 추가 */
-	border-radius: 8px;
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	border: 1px solid #eee;
+	padding: 15px;
+	border-radius: 10px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 	background-color: #fff;
-	transition: transform 0.2s ease-in-out;
-	justify-content: space-between; /* 요소들 간의 간격을 고르게 배치 */
+	transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+	justify-content: space-between;
 	cursor: pointer;
 }
 
-/* 레시피 항목에 마우스를 올렸을 때 */
 .cook-item:hover {
-	transform: translateY(-5px);
+	transform: translateY(-7px);
+	box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-/* 이미지 크기 설정 */
 .cook-image img {
-	width: 150px; /* 이미지 크기 키움 */
-	height: 150px; /* 이미지 크기 키움 */
-	object-fit: contain;
-	border-radius: 5px;
-	margin-top: 15px;
-	margin-bottom: 15px; /* 이미지와 텍스트 사이에 여백 추가 */
+	width: 160px;
+	height: 160px;
+	object-fit: cover; /* 이미지가 잘리지 않도록 변경 */
+	border-radius: 8px;
+	margin-bottom: 15px;
 }
 
-/* 레시피 이름 스타일 */
 .cook-name {
-	font-size: 18px; /* 이름 크기 키움 */
+	font-size: 19px;
 	font-weight: bold;
 	color: #333;
-	margin-top: 15px; /* 이름을 아래로 이동 */
+	margin-bottom: 8px;
+	word-break: keep-all; /* 단어 단위 줄바꿈 */
+	line-height: 1.3;
 }
 
-/* 읽은 횟수 스타일 */
 .read-count {
-	font-size: 16px; /* 글자 크기 키움 */
+	font-size: 15px;
 	color: #777;
-	margin-top: 10px; /* 읽은 횟수를 이름 아래로 이동 */
 }
 
-/* 전체 컨테이너 스타일 */
-.center-container {
-	width: 60%;
-	margin: 50px auto;
+.page-title {
+	text-align: center;
+	font-size: 36px;
+	font-weight: bold;
+	color: #2c3e50;
+	margin: 50px 0 30px;
+}
+
+/* --- 레시피 상세 페이지 (recipe_details.html) --- */
+
+/* 전체 상세 컨테이너 */
+.cook-details-container {
+	max-width: 900px; /* 최대 너비 조정 */
+	margin: 40px auto;
+	padding: 30px 40px;
+	border: 1px solid #ddd;
+	border-radius: 12px;
+	background-color: #fff;
+	box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* 제목 영역 */
+.cook-header {
+	text-align: center;
+	margin-bottom: 35px;
+}
+
+.cook-title {
+	font-size: 38px;
+	font-weight: bold;
+	color: #2c3e50;
+	margin-bottom: 10px;
+}
+
+/* 요리 완성 이미지 */
+.cook-content .cook-image {
+	text-align: center;
+	margin-bottom: 35px;
+}
+
+.cook-content .cook-image img {
+	max-width: 100%;
+	height: auto;
+	border-radius: 10px;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 재료 */
+.cook-ingredients, .cook-steps, .comment-section, .comments-list-section
+	{
+	margin-bottom: 40px;
+	padding: 20px; /* 내부 여백 추가 */
+	border: 1px solid #eee;
+	border-radius: 10px;
+	background-color: #fcfcfc;
+}
+
+.cook-ingredients h2, .cook-steps h2, .comment-section h2, .share-title
+	{
+	font-size: 26px;
+	font-weight: bold;
+	color: #34495e;
+	margin-bottom: 20px;
 	text-align: center;
 }
 
-.image-text-container {
-	display: flex;
-	align-items: center; /* 세로 중앙 정렬 */
-	justify-content: center; /* 가로 정렬 */
-	gap: 50px; /* 이미지와 텍스트 사이 여백 */
+.cook-ingredients ul {
+	list-style: none;
+	padding-left: 0;
+	text-align: center;
 }
 
-/* 요리 사진 스타일 */
-.image-container img {
-	display: block;
-	max-width: 300px;
-	height: auto;
-	border-radius: 8px; /* 둥근 테두리 */
+.cook-ingredients li {
+	font-size: 18px;
+	margin-bottom: 8px;
+	color: #555;
+}
+
+/* 요리 순서 */
+.recipe-steps-list {
+	list-style: none;
+	padding: 0;
+	counter-reset: step-counter;
+	display: flex;
+	flex-direction: column;
+	gap: 30px;
+}
+
+.recipe-step-item {
+	display: flex;
+	flex-direction: column; /* 모바일 대응을 위해 기본을 세로로 변경 */
+	align-items: center;
+	gap: 15px;
+	padding-bottom: 20px;
+	border-bottom: 1px solid #eee;
+}
+
+@media ( min-width : 768px) {
+	.recipe-step-item {
+		flex-direction: row; /* 데스크톱에서는 가로로 */
+		align-items: flex-start;
+		gap: 25px;
+	}
+}
+
+.step-number {
+	font-weight: bold;
+	font-size: 20px;
+	color: #007bff;
+	flex-shrink: 0; /* 숫자가 줄어들지 않도록 */
+}
+
+.step-image img {
+	width: 180px;
+	height: 130px;
+	object-fit: cover;
+	border-radius: 8px;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* 상세 정보 스타일 */
-.details {
-	text-align: left; /* 텍스트 왼쪽 정렬 */
-	font-size: 18px;
-	line-height: 1.8;
-}
-
-.details div {
-	margin: 5px 0;
-	font-weight: bold;
-}
-
-/* 텍스트 항목들(이름, 인분, 소요 시간)의 위아래 간격을 넓힘 */
-.d-cook-name, .d-cook-portion, .d-cook-time {
-	font-size: 30px;
-	text-align: center;
-	margin-top: 15px; /* 위쪽 간격 */
-	margin-bottom: 15px; /* 아래쪽 간격 */
-}
-
-/* 북마크 버튼의 위아래 간격을 넓힘 */
-.bookmark-container {
-	margin-top: 20px; /* 위쪽 간격 */
-	margin-bottom: 20px; /* 아래쪽 간격 */
-	text-align: center;
-}
-
-/* 재료 제목 */
-.recipe-title {
-	font-size: 20px;
-	font-weight: bold;
-	color: #333;
-	margin-top: 30px;
-	margin-bottom: 10px;
-	text-align: center;
-}
-
-/* 재료 내용 */
-.ingredients {
-	font-size: 16px;
-	line-height: 1.6;
-	color: #555;
-	margin-bottom: 30px;
-	text-align: center;
-}
-
-/* 레시피 단계 리스트 */
-.recipe-steps {
-	list-style-type: decimal; /* 숫자 매기기 */
-	text-align: center; /* 번호와 텍스트를 중앙으로 정렬 */
-	padding-left: 0; /* 기본적인 왼쪽 여백 제거 */
-	margin: 0 auto; /* 중앙 정렬 */
-	width: fit-content; /* 내용에 맞게 너비 설정 */
-}
-
-.recipe-steps li {
-	margin-bottom: 10px;
-}
-
-.blank_bottom {
-	height: 10px; /* 높이를 설정하여 하단에 공간을 추가 */
-	margin-bottom: 10px; /* 하단 여백을 추가 */
-}
-
-.list.center-container {
-	border: 0.5px solid #ccc; /* 얇은 회색 선 */
-	padding: 10px; /* 내부 여백 */
-	border-radius: 5px; /* 모서리 둥글게 (선택사항) */
-}
-
-.mtrl-container {
-	border: 0.5px solid #ccc; /* 얇은 회색 선 */
-	padding: 10px; /* 내부 여백 */
-	border-radius: 5px; /* 모서리 둥글게 (선택사항) */
-}
-
-.recipe-container {
-	border: 0.5px solid #ccc; /* 얇은 회색 선 */
-	padding: 10px; /* 내부 여백 */
-	border-radius: 5px; /* 모서리 둥글게 (선택사항) */
-}
-
-.youtubeLink {
-	border: 0.5px solid #ccc; /* 얇은 회색 선 */
-	padding: 10px; /* 내부 여백 */
-	border-radius: 5px; /* 모서리 둥글게 (선택사항) */
-}
-
-/* 댓글 등록 영역 */
-.comment-container {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
-
-/* 댓글 폼 */
-.comment-form {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-}
-
-/* 텍스트 입력창 */
-.comment-textarea {
-	height: 100px;
-	width: 800px;
-	resize: none;
-	box-sizing: border-box;
-	padding: 10px;
-	border: 1px solid #ccc;
-}
-
-/* 제출 버튼 */
-.comment-submit {
-	height: 100px;
-	width: 100px;
-	box-sizing: border-box;
-	padding: 10px;
-	border: 1px solid #ccc;
-	cursor: pointer;
-	background-color: #0066ff; /* 버튼 색상 변경 */
-	color: white;
-}
-
-/* 댓글 항목의 헤더 (아이디 + 작성일) */
-.comment-header {
-	display: flex;
-	align-items: center; /* 수직 정렬을 맞추기 위해 추가 */
-	font-size: 14px;
-	color: #333;
-	margin-bottom: 5px;
-}
-
-/* 작성자 아이디 */
-.comment-id {
-	font-weight: bold;
-	margin-right: 15px; /* 아이디와 날짜 사이에 간격 추가 */
+.step-description {
+	flex: 1;
 	font-size: 17px;
+	line-height: 1.7;
+	color: #333;
 }
 
-/* 작성 날짜 */
-.comment-date {
-	color: #777;
-	font-size: 13px;
-}
-
-/* 댓글 내용 */
-.comment-content {
-	margin-bottom: 10px;
-	font-size: 15px;
-	overflow-wrap: break-word; /* 길어지는 단어를 줄 바꿈 */
-}
-
-.comment-text {
-	font-size: 14px;
-	line-height: 1.5;
-	max-width: 100%;
-}
-
-/* 댓글 리스트 스타일 (부모 요소) */
-.comment-list {
+/* --- 좋아요/싫어요 및 북마크 --- */
+.actions {
 	display: flex;
-	flex-direction: column;
-	gap: 20px;
-	margin-top: 20px;
+	justify-content: space-between;
+	align-items: center;
+	margin: 30px 0;
+	padding: 20px 0;
+	border-top: 1px solid #eee;
+	border-bottom: 1px solid #eee;
+}
+
+.bookmark-btn {
+	background: none;
+	border: none;
+	cursor: pointer;
 	padding: 0;
-	list-style-type: none;
-	justify-content: center; /* 가운데 정렬 */
-	align-items: center; /* 수평 및 수직 가운데 정렬 */
+	font-size: 0; /* 이미지 버튼이므로 폰트 사이즈 0으로 */
 }
 
-/* 각 댓글 항목 */
-.comment-item {
+.bookmark-btn img {
+	width: 38px;
+	height: 38px;
+	transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.bookmark-btn:hover img {
+	transform: scale(1.15);
+	filter: brightness(1.1);
+}
+
+.like-dislike-section {
 	display: flex;
-	flex-direction: column;
-	padding: 10px;
-	border: 1px solid #ddd;
-	border-radius: 5px;
-	background-color: #f9f9f9;
-	width: 1000px; /* 원하는 너비 설정 */
-	margin: 0 auto; /* 부모 요소에서 가운데 정렬 */
+	gap: 15px; /* 버튼 간격 조정 */
+	align-items: center;
 }
 
-/* 댓글 수정/삭제 및 좋아요/싫어요 버튼 영역 */
+.reaction-button { @extend .action-button; /* 공통 버튼 스타일 상속 */
+	padding: 8px 16px;
+	font-size: 15px;
+}
+
+.reaction-button[data-reaction-type="LIKE"] { @extend
+	.action-button.success;
+	
+}
+
+.reaction-button[data-reaction-type="DISLIKE"] { @extend
+	.action-button.danger;
+	
+}
+
+.like-count, .dislike-count {
+	font-size: 17px;
+	font-weight: bold;
+	color: #555;
+	min-width: 25px; /* 숫자 영역 확보 */
+	text-align: center;
+}
+
+/* --- 댓글 섹션 --- */
+.comment-section h2 {
+	text-align: center;
+}
+
+.comment-textarea {
+	width: 100%;
+	height: 100px; /* 높이 조정 */
+	padding: 12px;
+	font-size: 16px;
+	border-radius: 8px;
+	border: 1px solid #ccc;
+	resize: vertical; /* 수직으로만 크기 조절 가능 */
+	box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
+}
+
+.comment-submit-btn { @extend .action-button.primary; /* 공통 버튼 스타일 상속 */
+	margin-top: 15px;
+	float: right; /* 버튼 오른쪽 정렬 */
+}
+
+/* 댓글 목록 */
+.comments-list-section {
+	clear: both; /* float 해제 */
+	margin-top: 50px;
+}
+
+.comment-item {
+	border: 1px solid #eee;
+	padding: 18px;
+	border-radius: 8px;
+	margin-bottom: 20px; /* 각 댓글 아이템 간격 */
+	background-color: #fafafa;
+	max-width: 100%; /* 부모 요소에 맞춰 반응 */
+	margin: 0 auto 20px auto; /* 중앙 정렬 */
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.comment-meta {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 15px;
+	color: #666;
+	margin-bottom: 10px;
+	flex-wrap: wrap; /* 작은 화면에서 줄바꿈 */
+}
+
+.comment-author {
+	font-weight: bold;
+	color: #333;
+	margin-right: 15px;
+}
+
+.comment-date {
+	color: #888;
+}
+
 .comment-actions {
 	display: flex;
-	justify-content: space-between; /* 버튼들 가로로 배치 */
-	align-items: center; /* 수평 가운데 정렬 */
+	gap: 10px;
+	margin-top: 5px; /* 메타 정보와 버튼 사이 간격 */
 }
 
-/* 수정/삭제 버튼을 가로로 배치 */
-.comment-buttons {
-	display: flex;
-	gap: 10px; /* 버튼 간 간격 */
+.comment-actions .edit-comment-btn, .comment-actions .save-comment-btn,
+	.comment-actions .delete-comment-btn { @extend .action-button;
+	/* 공통 버튼 스타일 상속 */
+	padding: 6px 12px;
+	font-size: 14px;
+	margin: 0; /* 중복 마진 제거 */
 }
 
-/* 좋아요/싫어요 버튼 */
-.comment-likes {
+.comment-actions .edit-comment-btn { @extend .action-button.info;
+	
+}
+
+.comment-actions .save-comment-btn { @extend .action-button.success;
+	
+}
+
+.comment-actions .delete-comment-btn { @extend .action-button.danger;
+	
+}
+
+.comment-content {
+	font-size: 17px;
+	margin: 15px 0;
+	color: #444;
+	line-height: 1.6;
+	overflow-wrap: break-word;
+}
+
+.comment-edit-textarea {
+	width: 100%;
+	height: 80px;
+	padding: 10px;
+	font-size: 16px;
+	border-radius: 6px;
+	border: 1px solid #ccc;
+	resize: vertical;
+	box-sizing: border-box;
+}
+
+.comment-like-dislike {
 	display: flex;
-	gap: 10px; /* 버튼 간 간격 */
 	align-items: center;
+	gap: 15px;
+	margin-top: 15px;
+	border-top: 1px solid #f0f0f0;
+	padding-top: 10px;
 }
 
-/* 수정/삭제 버튼 스타일 */
-.comment-buttons input[type="submit"], .comment-likes input[type="submit"]
-	{
-	background-color: #4CAF50;
-	color: white;
-	padding: 5px 10px;
-	border: none;
-	border-radius: 5px;
-	cursor: pointer;
-	transition: background-color 0.3s ease;
-}
-
-.comment-buttons input[type="submit"]:hover, .comment-likes input[type="submit"]:hover
-	{
-	background-color: #45a049;
-}
-
-/* 삭제 버튼 스타일 */
-.comment-buttons form input[type="submit"] {
-	background-color: #DC3545;
-}
-
-.comment-buttons form input[type="submit"]:hover {
-	background-color: #c82333;
-}
-
-.comment-buttons input[type="submit"]:disabled, .comment-likes input[type="submit"]:disabled
-	{
-	background-color: #ccc;
-	cursor: not-allowed;
-}
-
-.youtubeImage {
-	cursor: pointer; /* 마우스를 올리면 클릭 가능한 느낌 */
-	display: block; /* 이미지가 블록 요소로 취급되어 margin을 사용할 수 있음 */
-	margin: 0 auto; /* 좌우 마진을 자동으로 설정하여 중앙 정렬 */
-}
-
-/* 버튼 스타일 */
+/* --- 관리자 버튼 --- */
 .form-actions {
+	display: flex;
 	justify-content: center;
 	margin-top: 30px;
-	display: flex;
+	margin-bottom: 40px; /* 아래쪽 여백 추가 */
 }
 
-.form-actions input {
-	padding: 10px 20px;
-	font-size: 16px;
-	font-weight: bold;
-	margin: 5px;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
-	transition: background-color 0.3s ease;
+.form-actions .modify-btn { @extend .action-button.info;
+	
 }
 
-.modify-btn {
-	background-color: #4CAF50;
-	color: white;
+.form-actions .delete-btn { @extend .action-button.danger;
+	
 }
 
-.modify-btn:hover {
-	background-color: #45A049;
-}
+/* --- 북마크 아이콘 (사용되지 않는 클래스 정리) --- */
+/* .bookmark-icon, .bookmark-icon.yellow, .bookmark-icon.gray - 이 부분은 이미지로 대체되었으므로 관련 CSS는 사용되지 않습니다. */
 
-.delete-btn {
-	background-color: #f44336;
-	color: white;
-}
-
-.delete-btn:hover {
-	background-color: #d32f2f;
-}
-
-.youtubeLink {
-	padding: 10px; /* 내부 여백 */
-	border-radius: 5px; /* 모서리 둥글게 (선택사항) */
-	display: flex;
-	justify-content: space-around; /* 아이콘들 사이에 균등한 간격 */
-	align-items: center; /* 아이콘들 수직 중앙 정렬 */
-}
-
-.bookmark-icon {
-	width: 30px;
-	height: 30px;
-	display: inline-block;
-	cursor: pointer;
-	background-color: transparent;
-	clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%,
-		32% 57%, 2% 35%, 39% 35%);
-	transition: background-color 0.3s ease;
-}
-
-.bookmark-icon.yellow {
-	background-color: #ffCA1A; /* 북마크가 있을 때 노란색 */
-}
-
-.bookmark-icon.gray {
-	background-color: gray; /* 북마크가 없을 때 회색 */
-}
-
-/* 페이지네이션 전체 스타일 */
+/* --- 페이지네이션 --- */
 .pagination {
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	list-style: none;
 	padding: 0;
-	margin: 20px 0;
+	margin: 40px 0;
 }
 
-/* 페이지네이션 링크 기본 스타일 */
 .pagination a, .pagination span {
 	display: inline-block;
-	padding: 8px 12px;
+	padding: 10px 15px;
 	margin: 0 5px;
 	text-decoration: none;
-	color: #0044cc; /* 색상 변경 */
+	color: #007bff;
 	background-color: #fff;
 	border: 1px solid #ddd;
-	border-radius: 4px;
+	border-radius: 5px;
 	font-size: 16px;
-	transition: background-color 0.3s, color 0.3s;
+	transition: background-color 0.3s, color 0.3s, border-color 0.3s;
 }
 
-/* 현재 페이지 표시 스타일 */
 .pagination .current {
-	background-color: #0080ff; /* 색상 변경 */
+	background-color: #007bff;
 	color: #fff;
-	border-color: #0080ff; /* 색상 변경 */
+	border-color: #007bff;
 	font-weight: bold;
+	cursor: default;
 }
 
-/* 링크에 마우스를 올렸을 때 */
 .pagination a:hover {
-	background-color: #0080ff; /* 색상 변경 */
+	background-color: #007bff;
 	color: #fff;
-	border-color: #0080ff; /* 색상 변경 */
+	border-color: #007bff;
 }
 
-/* '첫 페이지', '이전', '다음', '마지막 페이지' 스타일 */
-.pagination a:focus, .pagination a:active {
-	outline: none;
-	background-color: #0080ff;
-	color: white;
-}
-
-/* 첫 페이지, 마지막 페이지 버튼 활성화 상태 */
-.pagination a:first-child, .pagination a:last-child {
-	padding-left: 16px;
-	padding-right: 16px;
-}
-
-/* '이전', '다음' 버튼은 작은 스타일 */
-.pagination a {
-	font-size: 14px;
-}
-
-/* 페이지네이션이 비어있을 때의 스타일 */
 .pagination a.disabled {
 	color: #ccc;
 	background-color: #f9f9f9;
-	border-color: #ddd;
+	border-color: #eee;
 	pointer-events: none;
+	cursor: not-allowed;
 }
 
-.pagination a.disabled:hover {
-	background-color: #f9f9f9;
-	color: #ccc;
+/* --- 기타 섹션 (youtubeLink, share-container 등) --- */
+.youtubeLink, .share-container {
+	border: 1px solid #eee;
+	padding: 20px;
+	border-radius: 10px;
+	background-color: #fcfcfc;
+	margin-bottom: 30px;
+	text-align: center; /* 기본 가운데 정렬 */
 }
 
-/* 모바일 반응형 처리 */
-@media ( max-width : 768px) {
-	.pagination a, .pagination span {
-		font-size: 14px;
-		padding: 6px 10px;
-	}
+.youtubeLink {
+	display: flex;
+	justify-content: center; /* 중앙 정렬 */
+	align-items: center;
+	gap: 20px;
+}
+
+.youtubeImage {
+	cursor: pointer;
+	max-width: 100%;
+	height: auto;
+	border-radius: 8px;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	transition: transform 0.2s ease;
+}
+
+.youtubeImage:hover {
+	transform: scale(1.03);
+}
+
+.share-title {
+	margin-bottom: 20px;
+	text-align: center;
 }
 
 .link-icon {
-	position: relative;
 	display: inline-block;
-	width: auto;
-	font-size: 14px;
-	font-weight: 500;
-	color: #333;
-	margin-right: 10px;
-	padding-top: 50px;
+	width: 40px; /* 아이콘 크기 */
+	height: 40px; /* 아이콘 크기 */
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	cursor: pointer;
+	margin: 0 10px;
+	vertical-align: middle;
+	transition: transform 0.2s ease;
 }
 
+.link-icon:hover {
+	transform: scale(1.1);
+}
+
+/* 아이콘 이미지 경로 (th:href 대신 직접 경로 사용) */
 .link-icon.twitter {
-	background-image: url(../img/icon-twitter.png);
-	background-repeat: no-repeat;
+	background-image: url('../img/icon-twitter.png');
 }
 
 .link-icon.facebook {
-	background-image: url(../img/icon-facebook.png);
-	background-repeat: no-repeat;
+	background-image: url('../img/icon-facebook.png');
 }
 
 .link-icon.kakao {
-	background-image: url(../img/icon-kakao.png);
-	background-repeat: no-repeat;
+	background-image: url('../img/icon-kakao.png');
 }
 
-.share-container {
-	border: 0.5px solid #ccc; /* 얇은 회색 선 */
-	padding: 10px; /* 내부 여백 */
-	border-radius: 5px; /* 모서리 둥글게 (선택사항) */
+/* --- 반응형 미디어 쿼리 --- */
+@media ( max-width : 992px) { /* 태블릿 */
+	.cook-details-container {
+		margin: 30px auto;
+		padding: 25px;
+	}
+	.cook-title {
+		font-size: 32px;
+	}
+	.cook-ingredients h2, .cook-steps h2, .comment-section h2, .share-title
+		{
+		font-size: 24px;
+	}
+	.cook-ingredients li, .cook-steps li, .step-description,
+		.comment-content, .comment-textarea {
+		font-size: 16px;
+	}
+	.recipe-step-item {
+		flex-direction: column; /* 태블릿에서도 세로 정렬 */
+		align-items: center;
+	}
+	.step-image img {
+		width: 150px;
+		height: 110px;
+	}
 }
 
-/* 재료 제목 */
-.share-title {
-	font-size: 20px;
-	font-weight: bold;
-	color: #333;
-	margin-bottom: 10px;
-	text-align: center;
-}
-
-.cook-list-ranking {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 30px; /* 항목 간의 간격을 넓힘 */
-	justify-content: center;
-	padding: 20px; /* 레시피 목록 주변 여백 추가 */
-	width: 65%; /* 부모 요소의 너비에 맞게 확장 */
-	height: auto; /* 높이는 내용에 맞춰 자동 조정 */
-	margin-left: 17.5%;
-	margin-right: 17.5%;
-}
-
-/* 페이지 제목 */
-.page-title {
-	text-align: center;
-	font-size: 32px;
-	margin-top: 50px;
+@media ( max-width : 768px) { /* 모바일 */
+	.cook-list, .cook-list-ranking {
+		gap: 15px;
+		padding: 10px;
+	}
+	.cook-item {
+		width: 180px;
+		height: 280px;
+		padding: 10px;
+	}
+	.cook-image img {
+		width: 130px;
+		height: 130px;
+	}
+	.cook-name {
+		font-size: 17px;
+	}
+	.cook-details-container {
+		padding: 15px;
+		margin: 20px auto;
+		border-radius: 8px;
+	}
+	.cook-title {
+		font-size: 28px;
+	}
+	.cook-ingredients h2, .cook-steps h2, .comment-section h2, .share-title
+		{
+		font-size: 22px;
+	}
+	.cook-ingredients li, .cook-steps li, .step-description,
+		.comment-content, .comment-textarea {
+		font-size: 15px;
+	}
+	.comment-item {
+		padding: 12px;
+		margin-bottom: 15px;
+	}
+	.comment-meta {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 5px;
+	}
+	.comment-actions {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 5px;
+	}
+	.action-button, .reaction-button, .comment-actions .action-button {
+		padding: 8px 12px;
+		font-size: 14px;
+	}
+	.comment-submit-btn {
+		width: 100%;
+		float: none;
+	}
+	.like-dislike-section {
+		gap: 10px;
+	}
+	.like-count, .dislike-count {
+		font-size: 15px;
+	}
+	.pagination a, .pagination span {
+		padding: 6px 10px;
+		font-size: 14px;
+		margin: 0 3px;
+	}
+	.link-icon {
+		width: 30px;
+		height: 30px;
+	}
 }
 
 /* 댓글이 없을 때 */
 .no-comments {
 	text-align: center;
-	font-size: 24px;
-	color: #555;
+	font-size: 22px;
+	color: #777;
+	padding: 30px;
+	border: 1px solid #eee;
+	border-radius: 10px;
+	background-color: #fdfdfd;
+	margin-top: 20px;
+}
+
+/* Sass/SCSS의 @extend처럼 CSS에서 직접 다른 클래스의 스타일을 가져올 수는 없습니다.
+   @extend를 사용하려면 SCSS 컴파일러가 필요하며,
+   현재 CSS 파일에서는 직접 클래스들을 나열하거나
+   변수를 사용하여 중복을 줄이는 방법을 사용해야 합니다.
+   여기서는 @extend 대신 해당 스타일들을 직접 복사/붙여넣기 하는 방식으로 처리했습니다.
+*/
+.action-button.primary, .comment-submit-btn {
+	background-color: #007bff;
+	color: white;
+}
+
+.action-button.primary:hover, .comment-submit-btn:hover {
+	background-color: #0056b3;
+}
+
+.action-button.danger, .action-button[data-reaction-type="DISLIKE"],
+	.comment-actions .delete-comment-btn, .form-actions .delete-btn {
+	background-color: #dc3545;
+	color: white;
+}
+
+.action-button.danger:hover, .action-button[data-reaction-type="DISLIKE"]:hover,
+	.comment-actions .delete-comment-btn:hover, .form-actions .delete-btn:hover
+	{
+	background-color: #c82333;
+}
+
+.action-button.success, .action-button[data-reaction-type="LIKE"],
+	.comment-actions .save-comment-btn {
+	background-color: #28a745;
+	color: white;
+}
+
+.action-button.success:hover, .action-button[data-reaction-type="LIKE"]:hover,
+	.comment-actions .save-comment-btn:hover {
+	background-color: #218838;
+}
+
+.action-button.info, .comment-actions .edit-comment-btn, .form-actions .modify-btn
+	{
+	background-color: #17a2b8;
+	color: white;
+}
+
+.action-button.info:hover, .comment-actions .edit-comment-btn:hover,
+	.form-actions .modify-btn:hover {
+	background-color: #138496;
 }

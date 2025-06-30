@@ -1,119 +1,212 @@
-// 댓글 등록 폼 제출 전 검증
-function validateCommentForm() {
-	var content = document.getElementById("content").value.trim(); // 댓글 내용 가져오기
-	if (content === "") {
-		alert("댓글을 입력해주세요.");
-		return false; // 폼 제출을 막음
+// board.js
+
+// Global variables passed from recipe_details.html
+// These are initialized in the <script layout:fragment="scripts"> block of recipe_details.html
+// For example:
+// var contextPath = /*[[@{/}]]*/'';
+// var loginedUserId = $('#loggedInUserId').val();
+
+/**
+ * Checks if the user is logged in.
+ * @returns {boolean} True if logged in, false otherwise.
+ */
+function checkLogin() {
+	if (!loginedUserId || String(loginedUserId).trim() === "" || String(loginedUserId).trim() === "null") {
+		alert("로그인이 필요합니다."); // Login required
+		window.location.href = contextPath + "/member/loginForm";
+		return false;
 	}
-	return true; // 폼 제출 진행
+	return true;
 }
 
-// 댓글 작성 textarea 클릭 시 로그인 여부 확인
-function checkLoginBeforeComment() {
-	var userId = document.getElementById("userId").value; // 로그인한 사용자의 ID 가져오기
-	if (!userId) { // 로그인되지 않았다면
-		var isLogin = confirm("로그인이 필요합니다. 로그인하시겠습니까?");
-		if (isLogin) {
-			// 로그인 페이지로 리디렉션
-			window.location.href = contextPath + "/member/loginForm"; // contextPath 변수를 사용
-			return false;
-		} else {
-			content.blur(); // 아무 동작도 하지 않고 그대로 페이지에 남아있음
-			return false;
+/**
+ * Handles click events for like/dislike buttons.
+ * Distinguishes between recipe reactions and comment reactions to collect appropriate data.
+ * @param {Event} event - The click event object.
+ */
+function handleReactionClick(event) {
+	const $clickedButton = $(event.currentTarget); // jQuery object for the clicked button
+
+	// Check login status
+	if (!checkLogin()) {
+		return; // If not logged in, stop function execution
+	}
+
+	let dataToSend = {}; // Object to hold data for the server request
+
+	// Determine which type of reaction button was clicked
+	// 1. Recipe like/dislike button (an <input type="submit"> within a form)
+	if ($clickedButton.closest('.like-dislike-section').length > 0 &&
+		$clickedButton.is('input[type="submit"].reaction-button')) {
+
+		const $form = $clickedButton.closest('form'); // Find the parent form
+		dataToSend = {
+			// For recipe reactions, only send recipe_id. Do NOT send board_no.
+			recipe_id: $form.find('input[name="recipe_id"]').val(),
+			userId: $form.find('input[name="userId"]').val(),
+			reactionType: $form.find('input[name="reactionType"]').val(),
+			target_type: 'recipe' // Explicitly set target type to 'recipe'
+		};
+		// Fields like ckg_nm, content, comment_userid are typically not needed for a reaction itself.
+		// If your server endpoint requires them, you'll need to uncomment and include them.
+		// dataToSend.ckg_nm = $form.find('input[name="ckg_nm"]').val();
+		// dataToSend.content = $form.find('input[name="content"]').val();
+		// dataToSend.comment_userid = $form.find('input[name="comment_userid"]').val();
+
+		console.log("DEBUG: Recipe like/dislike data collected:", dataToSend);
+
+	}
+	// 2. Comment like/dislike button (a <button> with data-target-type="comment")
+	else if ($clickedButton.data('target-type') === 'comment') {
+		dataToSend = {
+			// For comment reactions, only send board_no. Do NOT send recipe_id.
+			board_no: $clickedButton.data('board-no'),
+			userId: $clickedButton.data('user-id'),
+			reactionType: $clickedButton.data('reaction-type'),
+			target_type: $clickedButton.data('target-type') // 'comment'
+		};
+		// Similar to recipe reaction, these fields might not be necessary.
+		// dataToSend.ckg_nm = $clickedButton.data('ckg-nm');
+		// dataToSend.content = $clickedButton.data('content');
+		// dataToSend.comment_userid = $clickedButton.data('comment-userid');
+
+		console.log("DEBUG: Comment like/dislike data collected:", dataToSend);
+	} else {
+		// Unexpected .reaction-button click (e.g., HTML structure error)
+		console.error("DEBUG: Unknown .reaction-button click or unclear data origin:", $clickedButton);
+		alert("좋아요/싫어요 처리 중 알 수 없는 오류가 발생했습니다. 개발자 도구를 확인해주세요."); // Unknown error during like/dislike processing. Check developer tools.
+		return; // Stop if the button type is unrecognized
+	}
+
+	// Validate essential data before sending to the server
+	if (!dataToSend.userId || !dataToSend.reactionType || !dataToSend.target_type) {
+		console.error("DEBUG: Essential data (userId, reactionType, target_type) missing:", dataToSend);
+		alert("좋아요/싫어요 처리에 필요한 필수 정보가 부족합니다. 로그인 상태를 확인해주세요."); // Essential information missing. Please check login status.
+		return;
+	}
+	// Ensure either board_no or recipe_id is present based on target_type
+	if (dataToSend.target_type === 'recipe' && !dataToSend.recipe_id) {
+		console.error("DEBUG: Essential data (recipe_id) missing for recipe reaction:", dataToSend);
+		alert("레시피 정보가 부족하여 좋아요/싫어요 요청을 처리할 수 없습니다."); // Recipe information missing. Cannot process like/dislike request.
+		return;
+	}
+	if (dataToSend.target_type === 'comment' && !dataToSend.board_no) {
+		console.error("DEBUG: Essential data (board_no) missing for comment reaction:", dataToSend);
+		alert("댓글 정보가 부족하여 좋아요/싫어요 요청을 처리할 수 없습니다."); // Comment information missing. Cannot process like/dislike request.
+		return;
+	}
+
+
+	// AJAX request part
+	$.ajax({
+		url: contextPath + "/board/processReaction", // Controller URL
+		type: "POST",
+		data: dataToSend, // Use the collected dataToSend object
+		success: function(response) {
+			if (response.success) {
+				// UI update logic: update counts based on target_type
+				if (dataToSend.target_type === 'recipe') {
+					// Update recipe like/dislike counts using their IDs
+					// (Assuming recipe_details.html now has <span id="recipe-like-count-XXX">)
+					$("#recipe-like-count-" + dataToSend.recipe_id).text(response.newLikeCount);
+					$("#recipe-dislike-count-" + dataToSend.recipe_id).text(response.newDislikeCount);
+				} else if (dataToSend.target_type === 'comment') {
+					// Update comment like/dislike counts (IDs are already set)
+					$("#comment-like-count-" + dataToSend.board_no).text(response.newLikeCount);
+					$("#comment-dislike-count-" + dataToSend.board_no).text(response.newDislikeCount);
+				}
+				// Optional: Add logic for changing button state or icon here
+			} else {
+				alert("처리 실패: " + response.message); // Processing failed
+			}
+		},
+		error: function(xhr, status, error) {
+			console.error("좋아요/싫어요 처리 중 오류 발생:", status, error, xhr.responseText); // Error during like/dislike processing
+			try {
+				let errorResponse = JSON.parse(xhr.responseText);
+				alert("서버 통신 중 알 수 없는 문제가 발생했습니다: " + errorResponse.message); // Unknown server communication error
+			} catch (e) {
+				alert("서버 통신 중 알 수 없는 문제가 발생했습니다."); // Unknown server communication error
+			}
 		}
-	}
+	});
 }
 
-// 북마크 추가 로직
-function bookmark(event) {
-	event.preventDefault(); // 이벤트의 기본 동작 방지 (버튼 클릭 시 다른 동작 방지)
 
-	var userId = document.getElementById("userId").value; // 로그인한 사용자의 ID 가져오기
-	if (!userId || userId === "") {
-		var isLogin = confirm("로그인이 필요합니다. 로그인하시겠습니까?");
-		if (isLogin) {
-			window.location.href = contextPath + "/member/loginForm";
+// --- Code executed when DOM is ready ---
+$(document).ready(function() {
+	// Log loginedUserId when DOM is ready (for debugging)
+	console.log("board.js - loginedUserId (on DOM ready):", loginedUserId);
+
+	// Comment edit button click event
+	$('.edit-comment-btn').on('click', function() {
+		var $commentItem = $(this).closest('.comment-item');
+		var $commentContent = $commentItem.find('.comment-content');
+		var $textarea = $commentItem.find('.comment-edit-textarea');
+		var $saveBtn = $commentItem.find('.save-comment-btn');
+		var $editBtn = $(this);
+
+		$commentContent.hide();
+		$textarea.show();
+		$saveBtn.show();
+		$editBtn.hide();
+	});
+
+	// Comment save (finish editing) button click event (AJAX)
+	$('.save-comment-btn').on('click', function(e) {
+		e.preventDefault(); // Prevent default form submission
+
+		var $form = $(this).closest('form');
+		var boardNo = $form.find('input[name="board_no"]').val();
+		var newContent = $form.find('textarea[name="new_content"]').val();
+		var recipeId = $form.find('input[name="recipeId"]').val();
+		var ckgNm = $form.find('input[name="ckg_nm"]').val();
+		var userid = $form.find('input[name="userid"]').val();
+
+		if (newContent.trim() === "") {
+			alert("댓글 내용을 입력해주세요."); // Please enter comment content
 			return;
-		} else {
-			return false;
 		}
-	}
 
-	// 북마크 추가 로직
-	var CKG_NM = document.getElementById("CKG_NM").value;
-	var pageURL = window.location.href;
-	var cook_no = document.getElementById("cook_no").value;
+		$.ajax({
+			url: contextPath + "/board/updateComment",
+			type: "POST",
+			data: {
+				board_no: boardNo,
+				new_content: newContent,
+				recipeId: recipeId,
+				ckg_nm: ckgNm,
+				userid: userid
+			},
+			success: function(response) {
+				if (response.success) { // Assuming the server response has a 'success' field
+					var $commentItem = $form.closest('.comment-item');
+					$commentItem.find('.comment-content').text(newContent).show(); // Update content
+					$form.find('.comment-edit-textarea').hide();
+					$form.find('.save-comment-btn').hide();
+					$form.find('.edit-comment-btn').show();
+					alert("댓글이 수정되었습니다."); // Comment updated
+				} else {
+					alert("댓글 수정 실패: " + (response.message || "알 수 없는 오류")); // Comment update failed
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error("댓글 수정 오류:", status, error, xhr.responseText); // Comment update error
+				alert("댓글 수정에 실패했습니다. 다시 시도해주세요."); // Failed to update comment. Please try again.
+			}
+		});
+	});
 
-	// 숨겨진 필드 설정
-	document.getElementById("pageURL").value = pageURL;
-	document.getElementById("userId").value = userId;
-	document.getElementById("CKG_NM").value = CKG_NM;
-	document.getElementById("cook_no").value = cook_no;
+	// Attach click event to all .reaction-button classes
+	$(".reaction-button").on("click", handleReactionClick);
 
-	// 명확히 폼 선택 후 제출
-	document.getElementById("bookmarkForm").submit();
-}
+	// Comment submission button login check
+	$('.comment-submit-btn').on('click', function() {
+		return checkLogin();
+	});
 
-function editComment(content,board_no) {
-	var contentText = document.getElementById("content-text-" + content + "-" + board_no);
-	var contentTextarea = document.getElementById("content-edit-" + content+ "-"+board_no);
-	var updateForm = document.getElementById("updateForm-" + content+ "-"+board_no);
-	var updateButton = document.getElementById("updateButton-" + content+ "-"+board_no);
-
-	contentText.style.display = "none";
-	contentTextarea.style.display = "block";
-
-	updateButton.value = "제출";
-	updateButton.onclick = function() {
-		// 수정된 내용
-		var newContent = contentTextarea.value;
-
-		// 이미 존재하는 'new_content' hidden input이 있으면 값을 변경, 없으면 새로 생성
-		var hiddenContentField = updateForm.querySelector('input[name="new_content"]');
-		if (!hiddenContentField) {
-			hiddenContentField = document.createElement("input");
-			hiddenContentField.type = "hidden";
-			hiddenContentField.name = "new_content";
-			updateForm.appendChild(hiddenContentField);
-		}
-		hiddenContentField.value = newContent;  // textarea의 값을 hidden input에 반영
-
-		// 폼 제출
-		updateForm.submit();
-	};
-
-	return false;  // 기본 폼 제출을 방지하고 자바스크립트로 처리
-}
-
-function shareTwitter() {
-    var sendText = "나의 레시피"; // 전달할 텍스트
-	var pageURL = window.location.href;
-    window.open("https://twitter.com/intent/tweet?text=" + sendText + "&url=" + pageURL);
-}
-
-function shareFacebook() {
-	var pageURL = window.location.href;
-	console.log(pageURL);
-    window.open("http://www.facebook.com/sharer/sharer.php?u=" + pageURL);
-}
-
-function clipBoard() {
-	let dummy = document.createElement("input");
-	const url = location.href;
-
-	document.body.appendChild(dummy);
-	dummy.value = url;
-	dummy.select();
-	document.execCommand("copy");
-	alert("URL을 클립보드에 복사했습니다.");
-	document.body.removeChild(dummy);
-}
-
-
-function preventEnter(event) {
-	var form = document.getElementById('commentForm');
-	if (event.keyCode == 13) {
-		event.preventDefault();
-		form.submit();
-	}
-} 
+	// Bookmark button login check
+	$('.bookmark-btn').on('click', function() {
+		return checkLogin();
+	});
+});
