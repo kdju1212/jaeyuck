@@ -47,11 +47,6 @@ function handleReactionClick(event) {
 			reactionType: $form.find('input[name="reactionType"]').val(),
 			target_type: 'recipe' // Explicitly set target type to 'recipe'
 		};
-		// Fields like ckg_nm, content, comment_userid are typically not needed for a reaction itself.
-		// If your server endpoint requires them, you'll need to uncomment and include them.
-		// dataToSend.ckg_nm = $form.find('input[name="ckg_nm"]').val();
-		// dataToSend.content = $form.find('input[name="content"]').val();
-		// dataToSend.comment_userid = $form.find('input[name="comment_userid"]').val();
 
 		console.log("DEBUG: Recipe like/dislike data collected:", dataToSend);
 
@@ -65,10 +60,6 @@ function handleReactionClick(event) {
 			reactionType: $clickedButton.data('reaction-type'),
 			target_type: $clickedButton.data('target-type') // 'comment'
 		};
-		// Similar to recipe reaction, these fields might not be necessary.
-		// dataToSend.ckg_nm = $clickedButton.data('ckg-nm');
-		// dataToSend.content = $clickedButton.data('content');
-		// dataToSend.comment_userid = $clickedButton.data('comment-userid');
 
 		console.log("DEBUG: Comment like/dislike data collected:", dataToSend);
 	} else {
@@ -106,12 +97,9 @@ function handleReactionClick(event) {
 			if (response.success) {
 				// UI update logic: update counts based on target_type
 				if (dataToSend.target_type === 'recipe') {
-					// Update recipe like/dislike counts using their IDs
-					// (Assuming recipe_details.html now has <span id="recipe-like-count-XXX">)
 					$("#recipe-like-count-" + dataToSend.recipe_id).text(response.newLikeCount);
 					$("#recipe-dislike-count-" + dataToSend.recipe_id).text(response.newDislikeCount);
 				} else if (dataToSend.target_type === 'comment') {
-					// Update comment like/dislike counts (IDs are already set)
 					$("#comment-like-count-" + dataToSend.board_no).text(response.newLikeCount);
 					$("#comment-dislike-count-" + dataToSend.board_no).text(response.newDislikeCount);
 				}
@@ -205,8 +193,54 @@ $(document).ready(function() {
 		return checkLogin();
 	});
 
-	// Bookmark button login check
-	$('.bookmark-btn').on('click', function() {
-		return checkLogin();
+
+	// 북마크 버튼 클릭 이벤트(AJAX 처리)
+	$('.bookmark-btn').on('click', function(e) {
+		// 로그인 체크 (기존 로직 유지)
+		if (!checkLogin()) {
+			e.preventDefault(); // 로그인 안 되어 있으면 새로고침도 막음
+			return;
+		}
+
+		e.preventDefault(); // 버튼의 기본 제출 동작(페이지 새로고침) 방지
+
+		const $clickedButton = $(this);
+		const $form = $clickedButton.closest('form');
+		const recipeId = $form.find('input[name="recipeId"]').val();
+		const $bookmarkIcon = $clickedButton.find('#bookmarkIcon'); // span 태그를 정확히 선택해야 합니다.
+
+		console.log("DEBUG_JS: 북마크 버튼 클릭됨. recipeId:", recipeId); // 디버그 로그 추가
+		console.log("DEBUG_JS: $bookmarkIcon 현재 클래스:", $bookmarkIcon.attr('class')); // 디버그 로그 추가
+
+		$.ajax({
+			url: contextPath + "/list/toggleBookmark", // 북마크 토글 URL
+			type: "POST",
+			data: {
+				recipeId: recipeId
+			},
+			success: function(response) {
+				if (response.success) {
+					// 서버 응답에 따라 북마크 아이콘 변경 (CSS 클래스 토글)
+					// response.bookmarked: true/false (서버에서 현재 북마크 상태를 알려준다고 가정)
+					if (response.bookmarked) {
+						$bookmarkIcon.removeClass('unbookmarked-star').addClass('bookmarked-star');
+						alert("북마크에 추가되었습니다.");
+					} else {
+						$bookmarkIcon.removeClass('bookmarked-star').addClass('unbookmarked-star');
+						alert("북마크에서 제거되었습니다.");
+					}
+					console.log("DEBUG_JS: 북마크 처리 성공! 새로운 상태:", response.bookmarked ? "BOOKMARKED" : "UNBOOKMARKED"); // 디버그 로그 추가
+					console.log("DEBUG_JS: $bookmarkIcon 변경 후 클래스:", $bookmarkIcon.attr('class')); // 디버그 로그 추가
+				} else {
+					alert("북마크 처리 실패: " + (response.message || "알 수 없는 오류"));
+					console.error("DEBUG_JS: 북마크 처리 실패 메시지:", response.message);
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error("북마크 처리 중 오류 발생:", status, error, xhr.responseText);
+				alert("북마크 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+			}
+		});
 	});
+
 });

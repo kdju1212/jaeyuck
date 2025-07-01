@@ -149,28 +149,65 @@ public class ListController {
 	/*
 	 * 레시피 북마크 저장
 	 */
-	@PostMapping("/bookmark")
-	public String saveBookmark(@RequestParam("pageURL") String pageURL, @RequestParam("userid") String userid,
-			@RequestParam("CKG_NM") String title, @RequestParam("cook_no") int recipeId, Model model) {
+	@PostMapping("/toggleBookmark")
+	@ResponseBody
+	public Map<String, Object> toggleBookmark(@RequestParam("recipeId") int recipeId, HttpSession session) {
+		Map<String, Object> response = new HashMap<>();
+
+		// ✅✅✅ 변경된 부분 시작 ✅✅✅
+		String userId = null;
+		MemberVo loginedMemberVo = (MemberVo) session.getAttribute("loginedMemberVo"); // loginedMemberVo로 가져오기
+		if (loginedMemberVo != null) {
+			userId = loginedMemberVo.getUserid(); // MemberVo에서 userId 추출
+			System.out.println("DEBUG: ListController - toggleBookmark: 세션에서 가져온 userId: " + userId); // 디버그 로그 추가
+		} else {
+			System.out.println("DEBUG: ListController - toggleBookmark: 세션에서 loginedMemberVo를 찾을 수 없습니다."); // 디버그 로그 추가
+		}
+		// ✅✅✅ 변경된 부분 끝 ✅✅✅
+
+		if (userId == null) {
+			response.put("success", false);
+			response.put("message", "로그인이 필요합니다.");
+			return response;
+		}
 
 		try {
-			// URL 인코딩
-			String encodedPageURL = URLEncoder.encode(pageURL, "UTF-8");
-			String encodedTitle = URLEncoder.encode(title, "UTF-8");
-			String encodedRecipeId = URLEncoder.encode(String.valueOf(recipeId), "UTF-8");
+			boolean isBookmarked = listService.toggleBookmark(recipeId, userId);
 
-			// 북마크 저장
-			int result = listService.BookMark(encodedPageURL, userid, title, recipeId);
+			response.put("success", true);
+			response.put("bookmarked", isBookmarked);
+			response.put("message", isBookmarked ? "북마크에 추가되었습니다." : "북마크에서 제거되었습니다.");
+			System.out.println("DEBUG: ListController - toggleBookmark: 북마크 처리 성공 - isBookmarked: " + isBookmarked);
 
-			// 리다이렉트
-			return "redirect:/list/details?cook_no=" + encodedRecipeId + "&cookName=" + encodedTitle;
-
-		} catch (UnsupportedEncodingException e) {
+		} catch (Exception e) {
+			response.put("success", false);
+			response.put("message", "북마크 처리 중 서버 오류가 발생했습니다: " + e.getMessage());
+			System.err.println("ERROR: ListController - toggleBookmark: 북마크 처리 중 예외 발생: " + e.getMessage());
 			e.printStackTrace();
-			return "error";
 		}
+		return response;
 	}
 
+	/*
+	 * @PostMapping("/bookmark") public String saveBookmark(@RequestParam("pageURL")
+	 * String pageURL, @RequestParam("userid") String userid,
+	 * 
+	 * @RequestParam("CKG_NM") String title, @RequestParam("cook_no") int recipeId,
+	 * Model model) {
+	 * 
+	 * try { // URL 인코딩 String encodedPageURL = URLEncoder.encode(pageURL, "UTF-8");
+	 * String encodedTitle = URLEncoder.encode(title, "UTF-8"); String
+	 * encodedRecipeId = URLEncoder.encode(String.valueOf(recipeId), "UTF-8");
+	 * 
+	 * // 북마크 저장 int result = listService.BookMark(encodedPageURL, userid, title,
+	 * recipeId);
+	 * 
+	 * // 리다이렉트 return "redirect:/list/details?cook_no=" + encodedRecipeId +
+	 * "&cookName=" + encodedTitle;
+	 * 
+	 * } catch (UnsupportedEncodingException e) { e.printStackTrace(); return
+	 * "error"; } }
+	 */
 	/*
 	 * 레시피 조회수 증가
 	 */

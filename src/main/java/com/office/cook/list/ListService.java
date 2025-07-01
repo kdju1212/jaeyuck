@@ -26,8 +26,6 @@ public class ListService {
 		return listDao.getTotalCookCount(); // 전체 아이템 수를 반환
 	}
 
-	
-
 	/*
 	 * 요리 이름으로 상세 정보를 가져오는 메서드
 	 */
@@ -39,7 +37,7 @@ public class ListService {
 		}
 		return recipe;
 	}
-	
+
 	public RecipeVo getCookById(int recipeId) {
 		RecipeVo recipe = listDao.getRecipeById(recipeId);
 		if (recipe != null) {
@@ -52,18 +50,33 @@ public class ListService {
 	/*
 	 * 북마크
 	 */
-	public int BookMark(String pageUrl, String userid, String title, int recipeId) {
-		return listDao.insertBookmark(pageUrl, userid, title, recipeId);
+	public boolean toggleBookmark(int recipeId, String userId) {
+		// DAO에 직접 두 파라미터를 넘깁니다.
+		int bookmarkCount = listDao.checkBookmarkExists(recipeId, userId); // DAO 메서드 시그니처도 변경해야 함
+
+		if (bookmarkCount > 0) {
+			listDao.deleteBookmark(recipeId, userId); // DAO 메서드 시그니처도 변경해야 함
+			System.out.println("DEBUG: 북마크 삭제 - recipeId: " + recipeId + ", userId: " + userId);
+			return false;
+		} else {
+			listDao.insertBookmark(recipeId, userId); // DAO 메서드 시그니처도 변경해야 함
+			System.out.println("DEBUG: 북마크 추가 - recipeId: " + recipeId + ", userId: " + userId);
+			return true;
+		}
 	}
 
 	/*
+	 * public int BookMark(String pageUrl, String userid, String title, int
+	 * recipeId) { return listDao.insertBookmark(pageUrl, userid, title, recipeId);
+	 * }
+	 */
+	/*
 	 * 북마크 존재 여부
 	 */
-	public boolean isBookmarked(int cook_no, String userid) {
-
-		return listDao.isBookmarked(cook_no, userid);
-	}
-
+	 public boolean isBookmarked(int cook_no, String userid) {
+	 
+	 return listDao.isBookmarked(cook_no, userid); }
+	 
 	/*
 	 * 조회수를 증가시키는 메서드
 	 */

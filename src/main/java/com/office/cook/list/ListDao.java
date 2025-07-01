@@ -50,9 +50,21 @@ public class ListDao {
 				new BeanPropertyRowMapper<>(RecipeIngredientVo.class));
 	}
 
-	public int insertBookmark(String pageUrl, String userid, String title, int recipeId) {
-		String sql = "INSERT INTO cookbookmark (cook_no, ckg_nm, userid, pageurl) VALUES (?, ?, ?, ?)";
-		return jdbcTemplate.update(sql, recipeId, title, userid, pageUrl);
+	public int checkBookmarkExists(int recipeId, String userId) {
+		String sql = "SELECT COUNT(*) FROM cookbookmark WHERE recipe_id = ? AND userid = ?";
+		Integer count = jdbcTemplate.queryForObject(sql, Integer.class, recipeId, userId);
+		return (count != null) ? count : 0;
+	}
+
+	public int insertBookmark(int recipeId, String userId) { // title, pageUrl 파라미터 제거
+		String sql = "INSERT INTO cookbookmark (recipe_id, userid, bookmark_date) VALUES (?, ?, CURRENT_TIMESTAMP)";
+		// SQL 쿼리도 ckg_nm, pageurl 컬럼 제거 및 bookmark_date 추가
+		return jdbcTemplate.update(sql, recipeId, userId);
+	}
+
+	public int deleteBookmark(int recipeId, String userId) {
+		String sql = "DELETE FROM cookbookmark WHERE recipe_id = ? AND userid = ?";
+		return jdbcTemplate.update(sql, recipeId, userId);
 	}
 
 	public boolean isBookmarked(int recipeId, String userid) {

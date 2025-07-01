@@ -71,13 +71,20 @@
 			</div>
 
 			<div class="actions">
-				<form th:action="@{/list/toggleBookmark}" method="post">
+				<!-- <form id="bookmarkForm" method="post" action="javascript:void(0);">
 					<input type="hidden" name="recipeId" th:value="${recipe.recipeId}">
-					<button type="submit" class="bookmark-btn"
-						onclick="return checkLogin()">
-						<img
+					<button type="submit" class="bookmark-btn">
+						<img id="bookmarkIcon"
 							th:src="@{${bookmarkExists != null and bookmarkExists} ? '/img/bookmarked.png' : '/img/bookmark.png'}"
 							alt="북마크">
+					</button>
+				</form> -->
+				<form id="bookmarkForm" method="post" action="javascript:void(0);">
+					<input type="hidden" name="recipeId" th:value="${recipe.recipeId}">
+					<button type="submit" class="bookmark-btn">
+						<span id="bookmarkIcon"
+							th:class="${bookmarkExists != null and bookmarkExists} ? 'bookmarked-star' : 'unbookmarked-star'">
+							★ </span>
 					</button>
 				</form>
 
