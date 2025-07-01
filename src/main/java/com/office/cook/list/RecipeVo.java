@@ -17,6 +17,7 @@ public class RecipeVo {
 	private String tip;
 	private String completeImgUrl;
 	private Timestamp createdAt;
+	private int read_count;
 	private String userid; // <-- 이 줄을 추가하세요! 레시피 작성자의 ID
 
 	private List<RecipeStepVo> steps;

@@ -1,18 +1,11 @@
 package com.office.cook.list;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -26,11 +19,13 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.office.cook.board.BoardService;
 import com.office.cook.board.BoardVo;
 import com.office.cook.member.MemberVo;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
@@ -70,9 +65,88 @@ public class ListController {
 		return "main"; // Thymeleaf의 main.html
 	}
 
+//	@GetMapping("/details")
+//	public String getCookDetails(@RequestParam("recipeId") int recipeId,
+//			@RequestParam(value = "page", defaultValue = "1") int page, Model model, HttpSession session) {
+//
+//		String userid = null;
+//		MemberVo loginedMemberVo = (MemberVo) session.getAttribute("loginedMemberVo");
+//		if (loginedMemberVo != null) {
+//			userid = loginedMemberVo.getUserid();
+//		}
+//
+//		if (loginedMemberVo != null) {
+//			System.out.println("DEBUG_DETAILS_FINAL: model.addAttribute 직전 loginedMemberVo.userid: "
+//					+ loginedMemberVo.getUserid());
+//		} else {
+//			System.out.println(
+//					"DEBUG_DETAILS_FINAL: model.addAttribute 직전 loginedMemberVo가 NULL입니다 (세션이 NULL이거나 memberVo가 NULL).");
+//		}
+//
+//		// ✅ 레시피 상세 정보 조회 (recipe + steps + ingredients)
+//		RecipeVo recipe = listService.getCookById(recipeId);
+//		if (recipe == null) {
+//			// 해당 레시피가 없으면 목록 페이지로 리다이렉트
+//			return "redirect:/list";
+//		}
+//
+//		
+//
+//		if (recipe != null) {
+//			System.out.println("DEBUG_RECIPE: recipe.userid (레시피 작성자 ID): " + recipe.getUserid());
+//		} else {
+//			System.out.println("DEBUG_RECIPE: recipe is NULL.");
+//		}
+//
+//		// ✨ 레시피의 좋아요/싫어요 수 조회 ✨
+//		// boardService에서 레시피 전용 좋아요/싫어요 조회 메서드를 호출합니다.
+//		// 이 메서드들이 recipeId에 대한 좋아요/싫어요 수를 정확히 반환해야 합니다.
+//		int likeCount = boardService.getRecipeLikeCount(recipeId);
+//		int dislikeCount = boardService.getRecipeDislikeCount(recipeId);
+//
+//		// ✅ 댓글 페이지네이션 처리
+//		int pageSize = 10;
+//		int offset = (page - 1) * pageSize;
+//		int totalComments = boardService.getTotalCommentsCount(recipeId);
+//		int totalPages = (int) Math.ceil((double) totalComments / pageSize);
+//		List<BoardVo> boardList = boardService.getCommentsByCookId(recipeId, offset, pageSize);
+//
+//		System.out.println("가져온 댓글 개수: " + boardList.size());
+//		for (int i = 0; i < boardList.size(); i++) {
+//			BoardVo comment = boardList.get(i);
+//			if (comment == null) {
+//				System.err.println("!!!!! 경고: " + i + "번째 댓글 객체가 NULL 입니다 !!!!!!!!!");
+//			} else {
+//				System.out.println("댓글 " + i + ": board_no=" + comment.getBoard_no() + ", likeCount="
+//						+ comment.getLikeCount() + ", dislikeCount=" + comment.getDislikeCount());
+//			}
+//		}
+//
+//		// ✅ 북마크 확인
+//		boolean bookmarkExists = listService.isBookmarked(recipeId, userid);
+//
+//		// ✅ 모델에 데이터 전달
+//		model.addAttribute("loginedMemberVo", loginedMemberVo);
+//		model.addAttribute("recipe", recipe); // RecipeVo 객체 자체 전달
+//		model.addAttribute("steps", recipe.getSteps()); // 레시피 단계 리스트
+//		model.addAttribute("ingredients", recipe.getIngredients()); // 레시피 재료 리스트
+//		// model.addAttribute("boardList", boardList); // 댓글 리스트
+//		model.addAttribute("comments", boardList);
+//		model.addAttribute("currentPage", page);
+//		model.addAttribute("totalPages", totalPages);
+//		model.addAttribute("bookmarkExists", bookmarkExists);
+//		// ✨ 레시피의 좋아요/싫어요 수 모델에 추가 ✨
+//		model.addAttribute("likeCount", likeCount);
+//		model.addAttribute("dislikeCount", dislikeCount);
+//
+//		// 상세 페이지 템플릿 경로 반환
+//		return "/list/details";
+//	}
 	@GetMapping("/details")
 	public String getCookDetails(@RequestParam("recipeId") int recipeId,
-			@RequestParam(value = "page", defaultValue = "1") int page, Model model, HttpSession session) {
+			@RequestParam(value = "page", defaultValue = "1") int page, Model model, HttpSession session,
+			HttpServletRequest request, // ⭐ 파라미터 추가 ⭐
+			HttpServletResponse response) {
 
 		String userid = null;
 		MemberVo loginedMemberVo = (MemberVo) session.getAttribute("loginedMemberVo");
@@ -89,7 +163,7 @@ public class ListController {
 		}
 
 		// ✅ 레시피 상세 정보 조회 (recipe + steps + ingredients)
-		RecipeVo recipe = listService.getCookById(recipeId);
+		RecipeVo recipe = listService.getCookById(recipeId, request, response);
 		if (recipe == null) {
 			// 해당 레시피가 없으면 목록 페이지로 리다이렉트
 			return "redirect:/list";

@@ -26,7 +26,8 @@
 		<div th:if="${!#lists.isEmpty(recipeList)}">
 			<div class="cook-list">
 				<div th:each="recipe : ${recipeList}" class="cook-item clickable"
-					th:onclick="'redirectToInfo(' + ${recipe.recipeId} + ')'">
+					th:data-recipe-id="${recipe.recipeId}">
+					
 
 					<div class="cook-image">
 						<img th:src="${recipe.completeImgUrl}" th:alt="${recipe.title}">
@@ -34,7 +35,8 @@
 					</div>
 					<div class="cook-info">
 						<div class="cook-name" th:text="${recipe.title}"></div>
-						<!-- <div class="read-count" th:text="${recipe.readCount + ' views'}"></div> -->
+						<!-- <div class="read-count" th:text="${recipe.read_count + ' views'}"></div>-->
+						<div class="read-count" th:text="${recipe.read_count + ' views'}"></div>
 					</div>
 				</div>
 			</div>
@@ -62,8 +64,7 @@
 			<script th:inline="javascript">
 				var contextPath = /*[[@{/}]]*/'';
 				function redirectToInfo(recipeNo) {
-					window.location.href ='/list/details?recipeId='
-							+ recipeNo;
+					window.location.href = '/list/details?recipeId=' + recipeNo;
 				}
 			</script>
 		</div>

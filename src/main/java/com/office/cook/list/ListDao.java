@@ -76,9 +76,11 @@ public class ListDao {
 	/*
 	 * 조회수를 증가시키는 메서드
 	 */
-	public void incrementReadCount(int recipeId) {
+	public int incrementReadCount(int recipeId) {
 		String sql = "UPDATE recipe SET read_count = read_count + 1 WHERE recipe_id = ?";
-		jdbcTemplate.update(sql, recipeId);
+		// ⭐ jdbcTemplate.update()를 사용하여 SQL 쿼리를 실행합니다 ⭐
+		// update() 메서드는 DML (INSERT, UPDATE, DELETE) 쿼리를 실행하고, 영향을 받은 행의 수를 반환합니다.
+		return jdbcTemplate.update(sql, recipeId);
 	}
 
 	/*

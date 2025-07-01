@@ -5,6 +5,10 @@
 
 <head>
 <title>랭킹 페이지</title>
+<head layout:fragment="styles">
+<link rel="stylesheet" th:href="@{/css/list.css}">
+<link rel="stylesheet" th:href="@{/css/search.css}">
+</head>
 </head>
 
 <body>
@@ -18,26 +22,42 @@
 		<div th:if="${!#lists.isEmpty(cookList)}">
 			<div class="cook-list-ranking">
 				<div th:each="cook : ${cookList}" class="cook-item clickable"
-					th:data-recipe-id="${cook.recipeId}"
-					th:data-recipe-title="${cook.title}">
+					th:data-recipe-id="${cook.recipeId}">
 					<div class="cook-image">
 						<img th:src="${cook.completeImgUrl}" th:alt="${cook.title}">
 					</div>
 					<div class="cook-info">
 						<div class="cook-name" th:text="${cook.title}"></div>
-						<!-- <div class="read-count" th:text="${cook.read_count + ' views'}"></div> -->
+						<div class="read-count" th:text="${cook.read_count + ' views'}"></div>
 					</div>
 				</div>
 			</div>
 		</div>
+		<div layout:fragment="scripts">
+			<script type="text/javascript" th:src="@{/js/member.js}"></script>
+			<script th:src="@{/js/list.js}"></script>
+			<script th:src="@{/js/search.js}"></script>
+			<script th:inline="javascript">
+				var contextPath = /*[[@{/}]]*/'';
+
+				// 파라미터 이름을 recipeId로 일관성 있게 사용
+				//function redirectToInfo(recipeId) {
+				//	window.location.href = contextPath
+				//			+ 'list/details?recipeId=' + recipeId;
+				//}
+
+				// .clickable 요소에 클릭 이벤트 리스너를 붙여야 합니다.
+				$(document).ready(function() {
+					$('.cook-item.clickable').on('click', function() {
+						var recipeId = $(this).data('recipe-id');
+						redirectToInfo(recipeId);
+					});
+				});
+			</script>
+		</div>
 	</div>
 
-	<script th:inline="javascript">
-		var contextPath = /*[[@{/}]]*/'';
-		function redirectToInfo(recipeNo) {
-			window.location.href = '/list/details?recipeId=' + recipeNo;
-		}
-	</script>
+
 </body>
 
 </html>
