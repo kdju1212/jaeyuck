@@ -32,26 +32,45 @@ public class BoardController {
 	 * 댓글 작성
 	 */
 	@PostMapping("/addComment")
-	public String addComment(BoardVo comment) {
-		boardService.addComment(comment);
+	public String addComment(@RequestParam("recipeId") int recipeId, // HTML 폼의 name="recipeId"와 정확히 매핑
+			@RequestParam("content") String content, // 댓글 내용
+			@RequestParam("ckg_nm") String ckg_nm, // 요리 이름
+			HttpSession session) {
 
-		// CKG_NM은 recipe 테이블에서 조인해서 가져오므로, BoardVo에 항상 값이 있을 거라고 가정하기 어렵습니다.
-		// 리다이렉트 시에는 recipe_id만으로 충분하며, cookName은 필요하다면 해당 페이지에서 다시 조회할 수 있습니다.
-		// 또는, comment 객체에 ckg_nm이 있다면 (예: 폼에서 hidden 필드로 넘겨받았다면) 그대로 사용합니다.
-		String cookName = comment.getCKG_NM();
-		int recipe_id = comment.getRecipe_id();
+		MemberVo loginedMemberVo = (MemberVo) session.getAttribute("loginedMemberVo");
 
-		// cookName이 없을 경우의 예외 처리 로직은 그대로 유지합니다.
-		if (cookName == null || cookName.isEmpty()) {
-			return "error";
+		// 로그인 여부 확인
+		if (loginedMemberVo == null) {
+			System.out.println("DEBUG_ADD_COMMENT: 로그인되지 않은 사용자 요청.");
+			return "redirect:/member/loginForm"; // 로그인되어 있지 않으면 로그인 폼으로 리다이렉트
 		}
 
+		// BoardVo 객체를 생성하고 수동으로 값 설정
+		BoardVo comment = new BoardVo();
+		comment.setRecipe_id(recipeId); // ⭐ @RequestParam으로 받은 recipeId 값을 BoardVo에 설정 ⭐
+		comment.setUserid(loginedMemberVo.getUserid());
+		comment.setContent(content);
+		comment.setCKG_NM(ckg_nm);
+
+		// 디버그 로그 추가: 현재 전달받은 파라미터 값과 BoardVo에 설정된 값 확인
+		System.out.println("DEBUG_ADD_COMMENT: addComment 요청 - recipeId: " + recipeId);
+		System.out.println("DEBUG_ADD_COMMENT: addComment 요청 - content: " + content);
+		System.out.println("DEBUG_ADD_COMMENT: addComment 요청 - ckg_nm: " + ckg_nm);
+		System.out.println("DEBUG_ADD_COMMENT: BoardVo에 설정된 recipe_id: " + comment.getRecipe_id());
+		System.out.println("DEBUG_ADD_COMMENT: BoardVo에 설정된 userid: " + comment.getUserid());
+
+		// 서비스 계층 호출하여 댓글 저장
+		boardService.addComment(comment);
+
+		// 리다이렉트 URL 처리
+		// cookName (ckg_nm)이 URL 파라미터로 사용되므로 인코딩 필요
 		try {
-			String encodedCookName = URLEncoder.encode(cookName, "UTF-8");
-			// 리다이렉트 URL 파라미터는 'recipeId'로 통일
-			return "redirect:/list/details?recipeId=" + recipe_id + "&cookName=" + encodedCookName;
+			String encodedCookName = URLEncoder.encode(ckg_nm, "UTF-8");
+			// 댓글 등록 후 해당 레시피 상세 페이지로 리다이렉트
+			return "redirect:/list/details?recipeId=" + recipeId + "&cookName=" + encodedCookName;
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
+			// 인코딩 실패 시 에러 페이지 반환
 			return "error";
 		}
 	}
@@ -75,63 +94,111 @@ public class BoardController {
 	}
 
 	/*
-	 * 댓글 수정
+	 * 댓글 수정 (AJAX JSON 응답 방식으로 변경)
 	 */
 	@PostMapping("/updateComment")
-	public String updateComment(HttpSession session, BoardVo boardVo, @RequestParam("new_content") String new_content) {
-		System.out.println("updateComment Controller new_content=" + new_content);
+	@ResponseBody // JSON 응답을 위해 추가
+	public ResponseEntity<Map<String, Object>> updateComment( // 반환 타입을 String에서 ResponseEntity로 변경
+			HttpSession session, @RequestParam("board_no") int board_no, // 댓글 번호
+			// @RequestParam("recipeId") int recipeId, // 리다이렉트하지 않으므로 더 이상 필요 없을 수 있음 (선택적)
+			// @RequestParam("ckg_nm") String ckg_nm, // 리다이렉트하지 않으므로 더 이상 필요 없을 수 있음 (선택적)
+			@RequestParam("new_content") String new_content) {
+
+		Map<String, Object> response = new HashMap<>(); // 응답 데이터를 담을 맵 생성
 		MemberVo loginedMemberVo = (MemberVo) session.getAttribute("loginedMemberVo");
 
+		System.out.println(
+				"DEBUG_UPDATE_COMMENT: updateComment 요청 - new_content=" + new_content + ", board_no=" + board_no);
+
+		// 로그인 여부 확인
 		if (loginedMemberVo == null) {
-			return "redirect:/member/loginForm";
-		}
-
-		boardService.updateComment(loginedMemberVo.getUserid(), boardVo, new_content);
-
-		// 리다이렉트 URL 처리 (addComment와 동일)
-		String cookName = boardVo.getCKG_NM();
-		int recipe_id = boardVo.getRecipe_id();
-
-		if (cookName == null || cookName.isEmpty()) {
-			return "error";
+			response.put("success", false);
+			response.put("message", "로그인이 필요합니다.");
+			System.out.println("DEBUG_UPDATE_COMMENT: 로그인되지 않은 사용자. 401 UNAUTHORIZED");
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response); // 401 Unauthorized
 		}
 
 		try {
-			String encodedCookName = URLEncoder.encode(cookName, "UTF-8");
-			return "redirect:/list/details?recipeId=" + recipe_id + "&cookName=" + encodedCookName;
-		} catch (UnsupportedEncodingException e) {
+			// BoardVo 객체를 생성하여 필요한 값 설정 (권한 확인 및 서비스 로직을 위해)
+			BoardVo boardVo = new BoardVo();
+			boardVo.setBoard_no(board_no);
+			// boardVo.setRecipe_id(recipeId); // 만약 서비스에서 필요하다면 설정
+			// boardVo.setCKG_NM(ckg_nm); // 만약 서비스에서 필요하다면 설정
+
+			// 서비스 계층 호출 (서비스 내에서 해당 댓글의 소유자가 현재 로그인한 사용자인지 확인해야 함)
+			boardService.updateComment(loginedMemberVo.getUserid(), boardVo, new_content);
+
+			response.put("success", true);
+			response.put("message", "댓글이 성공적으로 수정되었습니다.");
+			// 프론트엔드에서 댓글 내용을 즉시 업데이트할 수 있도록, 수정된 내용도 함께 반환
+			response.put("updatedContent", new_content);
+			System.out.println("DEBUG_UPDATE_COMMENT: 댓글 수정 성공. 200 OK");
+			return ResponseEntity.ok(response); // 200 OK
+
+		} catch (RuntimeException e) { // 서비스에서 발생시킨 예외 (예: 권한 없음, 댓글 없음)
+			response.put("success", false);
+			response.put("message", e.getMessage());
+			System.out.println(
+					"DEBUG_UPDATE_COMMENT: 댓글 수정 실패 (RuntimeException): " + e.getMessage() + ". 400 BAD REQUEST");
+			return ResponseEntity.badRequest().body(response); // 400 Bad Request
+		} catch (Exception e) { // 기타 예상치 못한 서버 내부 오류
 			e.printStackTrace();
-			return "error";
+			response.put("success", false);
+			response.put("message", "서버 내부 오류가 발생했습니다.");
+			System.out.println(
+					"DEBUG_UPDATE_COMMENT: 댓글 수정 실패 (Exception): " + e.getMessage() + ". 500 INTERNAL SERVER ERROR");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response); // 500 Internal Server Error
 		}
 	}
 
 	/*
-	 * 댓글 삭제
+	 * 댓글 삭제 (AJAX JSON 응답 방식으로 변경)
 	 */
 	@PostMapping("/deleteComment")
-	public String deleteComment(HttpSession session, BoardVo boardVo) {
+	@ResponseBody // JSON 응답을 위해 추가
+	public ResponseEntity<Map<String, Object>> deleteComment( // 반환 타입을 String에서 ResponseEntity로 변경
+			HttpSession session, @RequestParam("board_no") int board_no // 삭제할 댓글 번호
+	) {
+		Map<String, Object> response = new HashMap<>(); // 응답 데이터를 담을 맵 생성
 		MemberVo loginedMemberVo = (MemberVo) session.getAttribute("loginedMemberVo");
 
+		System.out.println("DEBUG_DELETE_COMMENT: deleteComment 요청 - board_no=" + board_no);
+
+		// 로그인 여부 확인
 		if (loginedMemberVo == null) {
-			return "redirect:/member/loginForm";
-		}
-
-		boardService.deleteComment(loginedMemberVo.getUserid(), boardVo);
-
-		// 리다이렉트 URL 처리 (addComment와 동일)
-		String cookName = boardVo.getCKG_NM();
-		int recipe_id = boardVo.getRecipe_id();
-
-		if (cookName == null || cookName.isEmpty()) {
-			return "error";
+			response.put("success", false);
+			response.put("message", "로그인이 필요합니다.");
+			System.out.println("DEBUG_DELETE_COMMENT: 로그인되지 않은 사용자. 401 UNAUTHORIZED");
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response); // 401 Unauthorized
 		}
 
 		try {
-			String encodedCookName = URLEncoder.encode(cookName, "UTF-8");
-			return "redirect:/list/details?recipeId=" + recipe_id + "&cookName=" + encodedCookName;
-		} catch (UnsupportedEncodingException e) {
+			// BoardVo 객체를 생성하여 필요한 값 설정 (서비스 로직을 위해)
+			BoardVo boardVo = new BoardVo();
+			boardVo.setBoard_no(board_no);
+
+			// 서비스 계층 호출 (서비스 내에서 해당 댓글의 소유자가 현재 로그인한 사용자인지 확인해야 함)
+			boardService.deleteComment(loginedMemberVo.getUserid(), boardVo);
+
+			response.put("success", true);
+			response.put("message", "댓글이 성공적으로 삭제되었습니다.");
+			// 삭제 성공 시, 프론트엔드에서 해당 댓글 UI를 제거하도록 처리합니다.
+			System.out.println("DEBUG_DELETE_COMMENT: 댓글 삭제 성공. 200 OK");
+			return ResponseEntity.ok(response); // 200 OK
+
+		} catch (RuntimeException e) { // 서비스에서 발생시킨 예외 (예: 권한 없음, 댓글 없음)
+			response.put("success", false);
+			response.put("message", e.getMessage());
+			System.out.println(
+					"DEBUG_DELETE_COMMENT: 댓글 삭제 실패 (RuntimeException): " + e.getMessage() + ". 400 BAD REQUEST");
+			return ResponseEntity.badRequest().body(response); // 400 Bad Request
+		} catch (Exception e) { // 기타 예상치 못한 서버 내부 오류
 			e.printStackTrace();
-			return "error";
+			response.put("success", false);
+			response.put("message", "서버 내부 오류가 발생했습니다.");
+			System.out.println(
+					"DEBUG_DELETE_COMMENT: 댓글 삭제 실패 (Exception): " + e.getMessage() + ". 500 INTERNAL SERVER ERROR");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response); // 500 Internal Server Error
 		}
 	}
 

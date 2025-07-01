@@ -161,12 +161,11 @@
 										style="display: none;">저장</button>
 								</form>
 								<form th:action="@{/board/deleteComment}" method="post">
-									<input type="hidden" name="board_no"
+									<input type="hidden" class="comment-board-no" name="board_no"
 										th:value="${board.board_no}"> <input type="hidden"
 										name="recipeId" th:value="${recipe.recipeId}"> <input
 										type="hidden" name="ckg_nm" th:value="${recipe.title}">
-									<input type="submit" class="delete-comment-btn" value="삭제"
-										onclick="return confirm('댓글을 삭제하시겠습니까?');">
+									<input type="submit" class="delete-comment-btn" value="삭제">
 								</form>
 							</div>
 						</div>

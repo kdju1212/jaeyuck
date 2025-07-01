@@ -185,6 +185,52 @@ $(document).ready(function() {
 		});
 	});
 
+	// Comment delete button click event (AJAX)
+	$('.delete-comment-btn').on('click', function(e) {
+		e.preventDefault(); // 폼의 기본 제출 동작을 막습니다. (가장 중요!)
+
+		if (!checkLogin()) {
+			return;
+		}
+
+		if (!confirm("정말로 이 댓글을 삭제하시겠습니까?")) {
+			return;
+		}
+
+		var $commentItem = $(this).closest('.comment-item'); // 현재 댓글 항목 (삭제할 대상)
+		// 삭제 버튼이 포함된 폼을 찾아도 되고, hidden input에서 직접 찾아도 됩니다.
+		// HTML 구조에 따라 적절한 선택자를 사용하세요.
+		var boardNo = $commentItem.find('.comment-board-no').val(); // 예를 들어, .comment-board-no 클래스를 가진 hidden input
+
+		console.log("DEBUG_DELETE_COMMENT_JS: 삭제 요청 - board_no:", boardNo); // 디버그 로그 추가
+
+		$.ajax({
+			url: contextPath + "/board/deleteComment", // 서버 컨트롤러 URL
+			type: "POST",
+			data: {
+				board_no: boardNo // 서버에 보낼 데이터 (댓글 번호)
+			},
+			success: function(response) {
+				if (response.success) {
+					$commentItem.remove(); // AJAX 성공 시, 해당 댓글 항목을 DOM에서 제거
+					alert(response.message); // 서버에서 보낸 메시지 알림
+				} else {
+					alert("댓글 삭제 실패: " + (response.message || "알 수 없는 오류"));
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error("댓글 삭제 오류:", status, error, xhr.responseText);
+				let errorMessage = "댓글 삭제에 실패했습니다. 다시 시도해주세요.";
+				if (xhr.responseJSON && xhr.responseJSON.message) {
+					errorMessage += " (" + xhr.responseJSON.message + ")";
+				} else {
+					errorMessage += " (상태: " + status + ")";
+				}
+				alert(errorMessage);
+			}
+		});
+	});
+
 	// Attach click event to all .reaction-button classes
 	$(".reaction-button").on("click", handleReactionClick);
 
