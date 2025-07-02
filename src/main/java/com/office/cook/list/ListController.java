@@ -619,7 +619,7 @@ public class ListController {
 
 			// 완성 사진 관련
 			@RequestParam(value = "complete_photo", required = false) MultipartFile completePhoto,
-			@RequestParam("currentCompleteImgUrl") String currentCompleteImgUrl,
+			@RequestParam("currentCompleteImgUrl") String currentCompleteImgUrl, // ⭐ 이 필드는 이제 HTML에서 항상 전송됩니다.
 			@RequestParam("deleteImageFlag") String deleteImageFlag,
 
 			// 기존 재료 (ID, 이름, 수량)
@@ -749,8 +749,12 @@ public class ListController {
 					try {
 						deletedIngredientIdList.add(Integer.parseInt(id.trim()));
 						System.out.println("DEBUG: 삭제될 재료 ID 감지: " + id.trim());
-					} catch (NumberFormatException e) {
-						System.err.println("WARN: 유효하지 않은 삭제된 재료 ID: " + id + " - " + e.getMessage());
+					} /*
+						 * catch (NumberFormatException e) { // 이 부분은 이제 제거합니다.
+						 * System.err.println("WARN: 유효하지 않은 삭제된 재료 ID: " + id + " - " +
+						 * e.getMessage()); }
+						 */ catch (Exception e) { // NumberFormatException 외 다른 예외도 처리
+						System.err.println("WARN: 유효하지 않은 삭제된 재료 ID: " + id + " 또는 파싱 오류 - " + e.getMessage());
 					}
 				}
 			}
@@ -787,8 +791,8 @@ public class ListController {
 					MultipartFile stepPhoto = null;
 					if (stepPhotos != null && currentStepPhotoIndex < stepPhotos.size()) {
 						stepPhoto = stepPhotos.get(currentStepPhotoIndex);
-						// 파일이 비어있는 경우(선택하지 않은 경우)는 null로 처리
-						if (stepPhoto.isEmpty()) {
+						// 파일이 비어있는 경우(선택하지 않은 경우)는 null로 처리 (MultipartFile.isEmpty() 사용)
+						if (stepPhoto != null && stepPhoto.isEmpty()) {
 							stepPhoto = null;
 						}
 					}
@@ -813,7 +817,7 @@ public class ListController {
 						System.out.println("DEBUG: 단계 " + step.getStepId() + " 기존 이미지 유지: " + step.getStepImgUrl());
 					}
 					stepsToProcess.add(step);
-					currentStepPhotoIndex++; // 다음 파일 인덱스로 이동
+					currentStepPhotoIndex++; // ⭐ 중요: 파일을 가져왔든 안 가져왔든 무조건 증가시켜야 함.
 				}
 			}
 
@@ -830,7 +834,7 @@ public class ListController {
 					MultipartFile newStepPhoto = null;
 					if (stepPhotos != null && currentStepPhotoIndex < stepPhotos.size()) {
 						newStepPhoto = stepPhotos.get(currentStepPhotoIndex);
-						if (newStepPhoto.isEmpty()) {
+						if (newStepPhoto != null && newStepPhoto.isEmpty()) { // 비어있어도 인덱스는 증가시켜야 합니다.
 							newStepPhoto = null;
 						}
 					}
@@ -852,7 +856,7 @@ public class ListController {
 						System.out.println("DEBUG: 새 단계 " + step.getStepOrder() + " 이미지 없음.");
 					}
 					stepsToProcess.add(step);
-					currentStepPhotoIndex++; // 다음 파일 인덱스로 이동
+					currentStepPhotoIndex++; // ⭐ 중요: 파일을 가져왔든 안 가져왔든 무조건 증가시켜야 함.
 				}
 			}
 			recipe.setSteps(stepsToProcess);
@@ -867,8 +871,12 @@ public class ListController {
 					try {
 						deletedStepIdList.add(Integer.parseInt(id.trim()));
 						System.out.println("DEBUG: 삭제될 단계 ID 감지: " + id.trim());
-					} catch (NumberFormatException e) {
-						System.err.println("WARN: 유효하지 않은 삭제된 단계 ID: " + id + " - " + e.getMessage());
+					} /*
+						 * catch (NumberFormatException e) { // 이 부분도 제거
+						 * System.err.println("WARN: 유효하지 않은 삭제된 단계 ID: " + id + " - " +
+						 * e.getMessage()); }
+						 */ catch (Exception e) { // NumberFormatException 외 다른 예외도 처리
+						System.err.println("WARN: 유효하지 않은 삭제된 단계 ID: " + id + " 또는 파싱 오류 - " + e.getMessage());
 					}
 				}
 			}
