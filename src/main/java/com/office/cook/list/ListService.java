@@ -232,37 +232,65 @@ public class ListService {
 		return listDao.getIngredientsByRecipeId(recipeId);
 	}
 
-	public boolean deleteRecipeById(int recipeId) {
-		try {
-			return listDao.deleteRecipeById(recipeId) > 0;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return false;
-		}
+	@Transactional // 여러 DB 작업을 하나의 트랜잭션으로 묶습니다. (중요!)
+	public int deleteRecipe(int recipeId) {
+		// 관련된 모든 데이터를 먼저 삭제해야 합니다. (외래키 제약조건 위배 방지)
+		// 예를 들어: 재료, 단계, 댓글, 좋아요, 북마크 등
+		listDao.deleteIngredientsByRecipeId(recipeId); // DAO에 이 메서드 구현 필요
+		listDao.deleteStepsByRecipeId(recipeId); // DAO에 이 메서드 구현 필요
+		// 기타 관련 테이블 (댓글, 좋아요 등)이 있다면 여기에 추가:
+		listDao.deleteRecipeComments(recipeId);
+		listDao.deleteRecipeLikes(recipeId);
+
+		// 마지막으로 실제 레시피를 삭제합니다.
+		return listDao.deleteRecipeById(recipeId); // DAO에 이 메서드 구현 필요
 	}
 
 	/*
 	 * 레시피 수정
 	 */
-	public boolean updateRecipe(RecipeVo recipe) {
+	@Transactional // ✅ 트랜잭션 관리를 위해 @Transactional 어노테이션 추가
+	public boolean updateRecipe(RecipeVo recipe, List<Integer> deletedIngredientIds, List<Integer> deletedStepIds) {
 		try {
-			// 1. 기본 정보 수정
+			// 1. 레시피 기본 정보 수정 (완성 이미지 URL 포함)
+			// 이 메서드 내부에서 기존 완성 이미지 URL이 변경/삭제되면 Cloudinary에서도 삭제됩니다.
 			int updated = listDao.updateRecipe(recipe);
 
-			// 2. 재료 삭제 후 재등록
-			listDao.deleteIngredientsByRecipeId(recipe.getRecipeId());
-			for (RecipeIngredientVo ing : recipe.getIngredients()) {
-				listDao.insertIngredient(ing);
+			// 2. 명시적으로 삭제된 재료 처리
+			if (deletedIngredientIds != null && !deletedIngredientIds.isEmpty()) {
+				listDao.deleteIngredientsByIds(deletedIngredientIds); // 특정 ID만 삭제
 			}
 
-			// 3. 단계 삭제 후 재등록
-			listDao.deleteStepsByRecipeId(recipe.getRecipeId());
-			for (RecipeStepVo step : recipe.getSteps()) {
-				listDao.insertStep(step);
+			// 3. 모든 기존 재료 삭제 후, 현재 recipe 객체에 있는 재료들 재등록
+			// 이 방식은 재료가 많지 않을 때 간단하지만, 효율성은 떨어질 수 있습니다.
+			// 만약 효율이 중요하다면, updateIngredient와 insertIngredient를 조합해야 합니다.
+			listDao.deleteIngredientsByRecipeId(recipe.getRecipeId());
+			if (recipe.getIngredients() != null) {
+				for (RecipeIngredientVo ing : recipe.getIngredients()) {
+					ing.setRecipeId(recipe.getRecipeId()); // 반드시 recipeId 설정
+					listDao.insertIngredient(ing);
+				}
+			}
+
+			// 4. 명시적으로 삭제된 단계 처리
+			if (deletedStepIds != null && !deletedStepIds.isEmpty()) {
+				listDao.deleteStepsByIds(deletedStepIds); // 특정 ID만 삭제 (DAO에서 Cloudinary 이미지도 삭제)
+			}
+
+			// 5. 모든 기존 단계 삭제 후, 현재 recipe 객체에 있는 단계들 재등록
+			// 이 방식은 단계가 많지 않을 때 간단하지만, 효율성은 떨어질 수 있습니다.
+			// 만약 효율이 중요하다면, updateStep와 insertStep를 조합해야 합니다.
+			listDao.deleteStepsByRecipeId(recipe.getRecipeId()); // DAO에서 Cloudinary 이미지도 삭제
+			if (recipe.getSteps() != null) {
+				for (RecipeStepVo step : recipe.getSteps()) {
+					step.setRecipeId(recipe.getRecipeId()); // 반드시 recipeId 설정
+					listDao.insertStep(step);
+				}
 			}
 
 			return updated > 0;
 		} catch (Exception e) {
+			System.err.println("Service Error: Failed to update recipe. Recipe ID: " + recipe.getRecipeId());
 			e.printStackTrace();
 			return false;
 		}

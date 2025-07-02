@@ -19,15 +19,15 @@
 
 		<div class="form-actions">
 			<div
-				th:if="${not #strings.isEmpty(loginedMemberVo?.userid) and loginedMemberVo.userid == 'admin'}">
-				<form th:action="@{/list/modifyCooks}" method="post">
+				th:if="${loginedMemberVo != null and (loginedMemberVo.userid == 'admin' or loginedMemberVo.userid == recipe.userid)}">
+				<form th:action="@{/list/modifyCooks}" method="get">
 					<input type="hidden" name="recipeId" th:value="${recipe.recipeId}">
-					<input type="submit" class="modify-btn" value="레시피 수정">
+					<button type="submit" class="modify-btn">레시피 수정</button>
 				</form>
-				<form th:action="@{/list/deleteCooks}" method="post"
+				<form th:action="@{/list/deleteRecipe}" method="post"
 					onsubmit="return confirm('레시피를 삭제하시겠습니까?');">
 					<input type="hidden" name="recipeId" th:value="${recipe.recipeId}">
-					<input type="submit" class="delete-btn" value="레시피 삭제">
+					<button type="submit" class="delete-btn">레시피 삭제</button>
 				</form>
 			</div>
 		</div>

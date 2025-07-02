@@ -551,44 +551,48 @@ public class ListController {
 	/*
 	 * 정규화 구조 기반: 레시피 삭제 (AJAX)
 	 */
-	@RequestMapping("/deleteRecipe")
-	@ResponseBody
-	public Map<String, Object> deleteRecipe(@RequestParam("recipe_no") int recipeId) {
-		Map<String, Object> response = new HashMap<>();
-		try {
-			boolean isDeleted = listService.deleteRecipeById(recipeId);
+	@PostMapping("/deleteRecipe") // HTML 폼의 th:action 경로와 정확히 일치해야 합니다.
+	public String deleteRecipe(@RequestParam("recipeId") int recipeId, HttpSession session) {
 
-			if (isDeleted) {
-				response.put("success", true);
-			} else {
-				response.put("success", false);
-				response.put("message", "레시피 삭제에 실패했습니다.");
-			}
-		} catch (Exception e) {
-			response.put("success", false);
-			response.put("message", "삭제 중 오류가 발생했습니다.");
+		System.out.println("DEBUG: deleteRecipe 메서드 호출됨. recipeId: " + recipeId); // 디버그 로그 추가
+
+		MemberVo loginedMemberVo = (MemberVo) session.getAttribute("loginedMemberVo");
+
+		// 1. 로그인 여부 확인
+		if (loginedMemberVo == null) {
+			System.out.println("DEBUG: 로그인되지 않은 사용자.");
+			return "redirect:/member/loginForm"; // 로그인 페이지로 리다이렉트
 		}
-		return response;
-	}
 
-	/*
-	 * 레시피 상세보기 페이지에서 삭제
-	 */
-	@PostMapping("/deleteCooks")
-	public String deleteCooks(@RequestParam("recipe_no") int recipeId, Model model) {
+		RecipeVo recipe = listService.getRecipeById(recipeId); // 수정된 getCookById 사용 (이름 확인)
 
-		boolean isDeleted = listService.deleteRecipeById(recipeId);
+		// 2. 레시피 존재 여부 확인
+		if (recipe == null) {
+			System.out.println("DEBUG: 레시피 ID " + recipeId + "에 해당하는 레시피 없음.");
+			return "redirect:/list"; // 레시피 없으면 목록 페이지로
+		}
 
-		if (isDeleted) {
-			return "redirect:/list"; // 삭제 후 목록으로 이동
+		// 3. 권한 확인: 관리자이거나 레시피 작성자인지
+		if (!loginedMemberVo.getUserid().equals("admin") && !loginedMemberVo.getUserid().equals(recipe.getUserid())) {
+			System.out.println(
+					"DEBUG: 권한 없는 삭제 시도. 로그인 ID: " + loginedMemberVo.getUserid() + ", 레시피 작성자: " + recipe.getUserid());
+			return "redirect:/list/details?recipeId=" + recipeId + "&error=unauthorized"; // 권한 없음 에러
+		}
+
+		// 4. 서비스 계층으로 삭제 요청 전달
+		int result = listService.deleteRecipe(recipeId); // ListService에 deleteRecipe 메서드 구현 필요
+
+		if (result > 0) {
+			System.out.println("DEBUG: 레시피 " + recipeId + " 삭제 성공!");
+			return "redirect:/list"; // 삭제 성공 시 목록 페이지로 이동
 		} else {
-			model.addAttribute("errorMessage", "레시피 삭제에 실패했습니다. 다시 시도해주세요.");
-			return "register/recipeDetails"; // 상세 페이지로 복귀
+			System.out.println("DEBUG: 레시피 " + recipeId + " 삭제 실패!");
+			return "redirect:/list/details?recipeId=" + recipeId + "&error=deletionFailed"; // 실패 시 상세 페이지로 돌아가기
 		}
 	}
 
 	@RequestMapping("/modifyCooks")
-	public String getModifyCooks(@RequestParam("recipe_no") int recipeId, Model model) {
+	public String getModifyCooks(@RequestParam("recipeId") int recipeId, Model model) {
 		// 기본 정보
 		RecipeVo recipeInfo = listService.getRecipeById(recipeId);
 
@@ -606,94 +610,242 @@ public class ListController {
 		return "list/modifyCooks"; // → templates/list/modifyCooks.html
 	}
 
-	@PostMapping("/updateCooks")
-	public String updateCooks(@RequestParam("recipe_no") int recipeId, @RequestParam("title") String title,
-			@RequestParam("kind") String kindCode, @RequestParam("tip") String tip,
-			@RequestParam("material_name[]") List<String> materialNames,
-			@RequestParam("material_amount[]") List<String> materialAmounts,
-			@RequestParam("step_text[]") List<String> stepDescriptions,
-			@RequestParam("complete_photo") MultipartFile completePhoto, HttpServletRequest request, Model model) {
+	@PostMapping("/modify")
+	public String updateCooks(@RequestParam("recipeId") int recipeId, @RequestParam("title") String title,
+			@RequestParam("kind") String kind, 
+			//@RequestParam("difficulty") String difficulty, // 난이도 필드 (스키마에 있다면 사용)
+			@RequestParam("tip") String tip,
+
+			// 완성 사진 관련
+			@RequestParam(value = "complete_photo", required = false) MultipartFile completePhoto,
+			@RequestParam("currentCompleteImgUrl") String currentCompleteImgUrl,
+			@RequestParam("deleteImageFlag") String deleteImageFlag,
+
+			// 기존 재료 (ID, 이름, 수량)
+			@RequestParam(value = "existingIngredientIds", required = false) List<Integer> existingIngredientIds,
+			@RequestParam(value = "existingIngredientNames", required = false) List<String> existingIngredientNames,
+			@RequestParam(value = "existingIngredientAmounts", required = false) List<String> existingIngredientAmounts,
+
+			// 새로 추가된 재료
+			@RequestParam(value = "newIngredientNames", required = false) List<String> newIngredientNames,
+			@RequestParam(value = "newIngredientAmounts", required = false) List<String> newIngredientAmounts,
+
+			// 삭제된 재료 ID (콤마로 구분된 문자열)
+			@RequestParam(value = "deletedIngredientIds", required = false) String deletedIngredientIdsStr,
+
+			// 기존 단계 (ID, 설명, 기존 이미지 URL, 삭제 플래그)
+			@RequestParam(value = "existingStepIds", required = false) List<Integer> existingStepIds,
+			@RequestParam(value = "existingStepDescriptions", required = false) List<String> existingStepDescriptions,
+			@RequestParam(value = "existingStepCurrentImgUrls", required = false) List<String> existingStepCurrentImgUrls,
+			@RequestParam(value = "existingStepDeleteImageFlags", required = false) List<String> existingStepDeleteImageFlags,
+
+			// 새로 추가된 단계
+			@RequestParam(value = "newStepDescriptions", required = false) List<String> newStepDescriptions,
+
+			// 모든 단계의 이미지 파일 (기존 수정 or 새로 추가 모두 step_photo[]로 넘어옴)
+			@RequestParam(value = "step_photo", required = false) List<MultipartFile> stepPhotos,
+
+			// 삭제된 단계 ID (콤마로 구분된 문자열)
+			@RequestParam(value = "deletedStepIds", required = false) String deletedStepIdsStr,
+
+			HttpServletRequest request, Model model) {
+
 		try {
-			// ✅ Cloudinary 이미지 업로드
-			String imageUrl = null;
-			if (completePhoto != null && !completePhoto.isEmpty()) {
-				Map<String, Object> uploadResult = cloudinary.uploader().upload(completePhoto.getBytes(),
-						ObjectUtils.emptyMap());
-				imageUrl = (String) uploadResult.get("secure_url");
-			}
+			System.out.println("DEBUG: updateCooks 메서드 시작. RecipeId: " + recipeId);
 
-			// ✅ kind 매핑
-			String kind;
-			switch (kindCode) {
-			case "1":
-				kind = "한식";
-				break;
-			case "2":
-				kind = "중식";
-				break;
-			case "3":
-				kind = "일식";
-				break;
-			case "4":
-				kind = "양식";
-				break;
-			default:
-				kind = "기타";
-				break;
-			}
-
-			// ✅ RecipeVo 구성
+			// ====================================================================================
+			// 1. RecipeVo 기본 정보 구성 및 완성 이미지 처리
+			// ====================================================================================
 			RecipeVo recipe = new RecipeVo();
 			recipe.setRecipeId(recipeId);
 			recipe.setTitle(title);
 			recipe.setKind(kind);
+			// ⭐ 스키마에 difficulty 컬럼이 없다면 이 줄을 주석 처리하거나, DB 스키마에 추가해야 합니다.
+			// recipe.setDifficulty(difficulty);
 			recipe.setTip(tip);
-			if (imageUrl != null)
-				recipe.setCompleteImgUrl(imageUrl);
 
-			// ✅ 재료 세팅
-			List<RecipeIngredientVo> ingredients = new ArrayList<>();
-			for (int i = 0; i < materialNames.size(); i++) {
-				RecipeIngredientVo ing = new RecipeIngredientVo();
-				ing.setRecipeId(recipeId);
-				ing.setName(materialNames.get(i));
-				ing.setAmount(materialAmounts.get(i));
-				ingredients.add(ing);
+			// 완성 요리 이미지 처리 로직
+			if ("Y".equals(deleteImageFlag)) {
+				recipe.setCompleteImgUrl(null);
+				System.out.println("DEBUG: 완성 이미지 삭제 플래그 'Y' 감지. 이미지 URL null로 설정.");
+			} else if (completePhoto != null && !completePhoto.isEmpty()) {
+				Map<String, Object> uploadResult = cloudinary.uploader().upload(completePhoto.getBytes(),
+						ObjectUtils.emptyMap());
+				recipe.setCompleteImgUrl((String) uploadResult.get("secure_url"));
+				System.out.println("DEBUG: 새로운 완성 이미지 업로드: " + recipe.getCompleteImgUrl());
+			} else {
+				recipe.setCompleteImgUrl(currentCompleteImgUrl);
+				System.out.println("DEBUG: 기존 완성 이미지 유지: " + recipe.getCompleteImgUrl());
 			}
-			recipe.setIngredients(ingredients);
 
-			// ✅ 단계 세팅
-			List<RecipeStepVo> steps = new ArrayList<>();
-			for (int i = 0; i < stepDescriptions.size(); i++) {
-				RecipeStepVo step = new RecipeStepVo();
-				step.setRecipeId(recipeId);
-				step.setStepOrder(i + 1);
-				step.setDescription(stepDescriptions.get(i));
+			// ====================================================================================
+			// 2. 재료 처리 (기존 수정, 새로 추가)
+			// ====================================================================================
+			List<RecipeIngredientVo> ingredientsToProcess = new ArrayList<>();
 
-				MultipartFile stepPhoto = ((MultipartHttpServletRequest) request).getFile("step_photo_" + (i + 1));
-				if (stepPhoto != null && !stepPhoto.isEmpty()) {
-					Map<String, Object> uploadStep = cloudinary.uploader().upload(stepPhoto.getBytes(),
-							ObjectUtils.emptyMap());
-					step.setStepImgUrl((String) uploadStep.get("secure_url"));
+			if (existingIngredientIds != null) {
+				for (int i = 0; i < existingIngredientIds.size(); i++) {
+					RecipeIngredientVo ing = new RecipeIngredientVo();
+					ing.setIngredientId(existingIngredientIds.get(i));
+					ing.setRecipeId(recipeId);
+					ing.setName(existingIngredientNames.get(i));
+					ing.setAmount(existingIngredientAmounts.get(i));
+					ingredientsToProcess.add(ing);
+					System.out.println(
+							"DEBUG: 기존 재료 추가 (ID: " + ing.getIngredientId() + ", Name: " + ing.getName() + ")");
 				}
-
-				steps.add(step);
 			}
-			recipe.setSteps(steps);
 
-			// ✅ 서비스 호출
-			boolean isUpdated = listService.updateRecipe(recipe);
+			if (newIngredientNames != null) {
+				for (int i = 0; i < newIngredientNames.size(); i++) {
+					RecipeIngredientVo ing = new RecipeIngredientVo();
+					ing.setRecipeId(recipeId);
+					ing.setName(newIngredientNames.get(i));
+					ing.setAmount(newIngredientAmounts.get(i));
+					ingredientsToProcess.add(ing);
+					System.out.println("DEBUG: 새 재료 추가 (Name: " + ing.getName() + ")");
+				}
+			}
+			recipe.setIngredients(ingredientsToProcess);
+
+			// 삭제된 재료 ID 목록 파싱
+			List<Integer> deletedIngredientIdList = new ArrayList<>();
+			if (deletedIngredientIdsStr != null && !deletedIngredientIdsStr.isEmpty()) {
+				String[] ids = deletedIngredientIdsStr.split(",");
+				for (String id : ids) {
+					try {
+						deletedIngredientIdList.add(Integer.parseInt(id.trim()));
+						System.out.println("DEBUG: 삭제될 재료 ID 감지: " + id.trim());
+					} catch (NumberFormatException e) {
+						System.err.println("WARN: 유효하지 않은 삭제된 재료 ID: " + id + " - " + e.getMessage());
+					}
+				}
+			}
+
+			// ====================================================================================
+			// 3. 단계 처리 (기존 수정, 새로 추가, 이미지 업로드/삭제)
+			// ====================================================================================
+			List<RecipeStepVo> stepsToProcess = new ArrayList<>();
+			int currentStepPhotoIndex = 0;
+
+			if (existingStepIds != null) {
+				for (int i = 0; i < existingStepIds.size(); i++) {
+					RecipeStepVo step = new RecipeStepVo();
+					step.setStepId(existingStepIds.get(i));
+					step.setRecipeId(recipeId);
+					step.setStepOrder(i + 1);
+					step.setDescription(existingStepDescriptions.get(i));
+
+					String currentStepImgUrl = existingStepCurrentImgUrls.get(i);
+					String deleteStepImageFlag = existingStepDeleteImageFlags.get(i);
+
+					MultipartFile stepPhoto = null;
+					if (stepPhotos != null && currentStepPhotoIndex < stepPhotos.size()) {
+						stepPhoto = stepPhotos.get(currentStepPhotoIndex);
+						if (stepPhoto.isEmpty()) {
+							stepPhoto = null;
+						}
+					}
+
+					if ("Y".equals(deleteStepImageFlag)) {
+						step.setStepImgUrl(null);
+						System.out.println("DEBUG: 단계 " + step.getStepId() + " 이미지 삭제 플래그 'Y' 감지.");
+					} else if (stepPhoto != null) {
+						try {
+							Map<String, Object> uploadStep = cloudinary.uploader().upload(stepPhoto.getBytes(),
+									ObjectUtils.emptyMap());
+							step.setStepImgUrl((String) uploadStep.get("secure_url"));
+							System.out
+									.println("DEBUG: 단계 " + step.getStepId() + " 새로운 이미지 업로드: " + step.getStepImgUrl());
+						} catch (IOException e) {
+							System.err.println(
+									"ERROR: 단계 이미지 업로드 중 오류 발생 (Step ID: " + step.getStepId() + "): " + e.getMessage());
+							step.setStepImgUrl(currentStepImgUrl);
+						}
+					} else {
+						step.setStepImgUrl(currentStepImgUrl);
+						System.out.println("DEBUG: 단계 " + step.getStepId() + " 기존 이미지 유지: " + step.getStepImgUrl());
+					}
+					stepsToProcess.add(step);
+					currentStepPhotoIndex++;
+				}
+			}
+
+			if (newStepDescriptions != null) {
+				int startIndex = (existingStepIds != null) ? existingStepIds.size() : 0;
+				for (int i = 0; i < newStepDescriptions.size(); i++) {
+					RecipeStepVo step = new RecipeStepVo(); // ⭐ Type mismatch: RecipeVo cannot be converted to RecipeStepVo
+					// ⭐ 위에 RecipeVo로 잘못 선언되어 있습니다. RecipeStepVo로 수정해야 합니다.
+					// RecipeStepVo step = new RecipeStepVo(); // <-- 이렇게 수정
+					step.setRecipeId(recipeId);
+					step.setStepOrder(startIndex + i + 1);
+					step.setDescription(newStepDescriptions.get(i));
+
+					MultipartFile newStepPhoto = null;
+					if (stepPhotos != null && currentStepPhotoIndex < stepPhotos.size()) {
+						newStepPhoto = stepPhotos.get(currentStepPhotoIndex);
+						if (newStepPhoto.isEmpty()) {
+							newStepPhoto = null;
+						}
+					}
+
+					if (newStepPhoto != null) {
+						try {
+							Map<String, Object> uploadStep = cloudinary.uploader().upload(newStepPhoto.getBytes(),
+									ObjectUtils.emptyMap());
+							step.setStepImgUrl((String) uploadStep.get("secure_url"));
+							System.out.println(
+									"DEBUG: 새 단계 " + step.getStepOrder() + " 이미지 업로드: " + step.getStepImgUrl());
+						} catch (IOException e) {
+							System.err.println("ERROR: 새 단계 이미지 업로드 중 오류 발생 (Step Order: " + step.getStepOrder() + "): "
+									+ e.getMessage());
+							step.setStepImgUrl(null);
+						}
+					} else {
+						step.setStepImgUrl(null);
+						System.out.println("DEBUG: 새 단계 " + step.getStepOrder() + " 이미지 없음.");
+					}
+					stepsToProcess.add(step);
+					currentStepPhotoIndex++;
+				}
+			}
+			recipe.setSteps(stepsToProcess);
+
+			// 삭제된 단계 ID 목록 파싱
+			List<Integer> deletedStepIdList = new ArrayList<>();
+			if (deletedStepIdsStr != null && !deletedStepIdsStr.isEmpty()) {
+				String[] ids = deletedStepIdsStr.split(",");
+				for (String id : ids) {
+					try {
+						deletedStepIdList.add(Integer.parseInt(id.trim()));
+						System.out.println("DEBUG: 삭제될 단계 ID 감지: " + id.trim());
+					} catch (NumberFormatException e) {
+						System.err.println("WARN: 유효하지 않은 삭제된 단계 ID: " + id + " - " + e.getMessage());
+					}
+				}
+			}
+
+			// ====================================================================================
+			// 4. 서비스 호출
+			// ====================================================================================
+			boolean isUpdated = listService.updateRecipe(recipe, deletedIngredientIdList, deletedStepIdList);
 
 			if (!isUpdated) {
+				System.out.println("DEBUG: 레시피 수정 실패.");
 				model.addAttribute("errorMessage", "레시피 수정에 실패했습니다.");
 				return "list/modifyCooks";
 			}
 
-			// 성공 시 상세 페이지 리디렉션
-			return "redirect:/list/recipeDetails?recipe_no=" + recipeId + "&cookName="
-					+ URLEncoder.encode(title, "UTF-8");
+			System.out.println("DEBUG: 레시피 수정 성공! RecipeId: " + recipeId);
+			return "redirect:/list/details?recipeId=" + recipeId;
 
+		} catch (IOException e) {
+			System.err.println("ERROR: 파일 업로드 중 오류 발생: " + e.getMessage());
+			e.printStackTrace();
+			model.addAttribute("errorMessage", "파일 업로드 중 오류 발생");
+			return "list/modifyCooks";
 		} catch (Exception e) {
+			System.err.println("ERROR: 레시피 수정 중 알 수 없는 오류 발생: " + e.getMessage());
 			e.printStackTrace();
 			model.addAttribute("errorMessage", "레시피 수정 중 오류 발생");
 			return "list/modifyCooks";
