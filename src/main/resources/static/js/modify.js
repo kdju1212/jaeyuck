@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			if (stepIdInput && stepIdInput.value) { // 기존 단계인 경우에만 deletedStepIds에 추가
 				const currentDeletedIds = deletedStepIdsInput.value;
-				deletedStepIdsInput.value = currentDeletedIds ? `${currentDeletedIds},${stepIdInput.value}` : stepIdInput.value;
+				deletedStepIdsInput.value = currentDeletedIds ? `${currentDeletedIds},${stepIdInput.value}` : ingredientIdInput.value;
 			}
 			stepItem.remove();
 			updateStepLabels(); // 단계 번호 업데이트
@@ -118,7 +118,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			const newImageUploadSection = stepItem.querySelector('.new-step-image-upload-section');
 			const deleteFlagInput = stepItem.querySelector('input[name="existingStepDeleteImageFlags"]');
 			const currentImgUrlInput = stepItem.querySelector('input[name="existingStepCurrentImgUrls"]');
-
 			const newFileInput = newImageUploadSection ? newImageUploadSection.querySelector('input[type="file"]') : null;
 
 
@@ -127,16 +126,18 @@ document.addEventListener('DOMContentLoaded', function() {
 					deleteFlagInput.value = 'Y';
 				}
 				if (currentImgUrlInput) {
-					currentImgUrlInput.value = ''; // 현재 이미지 URL도 지웁니다.
+					// 📌 이 부분이 중요합니다! 'DELETED_IMAGE'로 변경합니다.
+					currentImgUrlInput.value = 'DELETED_IMAGE';
 				}
 
 				// UI 업데이트: 기존 이미지 섹션 숨기고, 새 이미지 업로드 섹션 표시
 				if (currentImageDisplaySection) currentImageDisplaySection.style.display = 'none';
 				if (newImageUploadSection) newImageUploadSection.style.display = 'block';
 
-				if (newFileInput) {
-					newFileInput.value = ''; // 파일 input 초기화
-				}
+				// 이전에 문제를 일으켰던 'newFileInput.value = '';' 줄은 제거되어 있어야 합니다.
+				// if (newFileInput) {
+				//     newFileInput.value = ''; 
+				// }
 
 				alert('단계 이미지가 삭제되었습니다. 저장 시 반영됩니다.');
 			}

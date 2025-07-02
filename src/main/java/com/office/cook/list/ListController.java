@@ -65,83 +65,6 @@ public class ListController {
 		return "main"; // Thymeleaf의 main.html
 	}
 
-//	@GetMapping("/details")
-//	public String getCookDetails(@RequestParam("recipeId") int recipeId,
-//			@RequestParam(value = "page", defaultValue = "1") int page, Model model, HttpSession session) {
-//
-//		String userid = null;
-//		MemberVo loginedMemberVo = (MemberVo) session.getAttribute("loginedMemberVo");
-//		if (loginedMemberVo != null) {
-//			userid = loginedMemberVo.getUserid();
-//		}
-//
-//		if (loginedMemberVo != null) {
-//			System.out.println("DEBUG_DETAILS_FINAL: model.addAttribute 직전 loginedMemberVo.userid: "
-//					+ loginedMemberVo.getUserid());
-//		} else {
-//			System.out.println(
-//					"DEBUG_DETAILS_FINAL: model.addAttribute 직전 loginedMemberVo가 NULL입니다 (세션이 NULL이거나 memberVo가 NULL).");
-//		}
-//
-//		// ✅ 레시피 상세 정보 조회 (recipe + steps + ingredients)
-//		RecipeVo recipe = listService.getCookById(recipeId);
-//		if (recipe == null) {
-//			// 해당 레시피가 없으면 목록 페이지로 리다이렉트
-//			return "redirect:/list";
-//		}
-//
-//		
-//
-//		if (recipe != null) {
-//			System.out.println("DEBUG_RECIPE: recipe.userid (레시피 작성자 ID): " + recipe.getUserid());
-//		} else {
-//			System.out.println("DEBUG_RECIPE: recipe is NULL.");
-//		}
-//
-//		// ✨ 레시피의 좋아요/싫어요 수 조회 ✨
-//		// boardService에서 레시피 전용 좋아요/싫어요 조회 메서드를 호출합니다.
-//		// 이 메서드들이 recipeId에 대한 좋아요/싫어요 수를 정확히 반환해야 합니다.
-//		int likeCount = boardService.getRecipeLikeCount(recipeId);
-//		int dislikeCount = boardService.getRecipeDislikeCount(recipeId);
-//
-//		// ✅ 댓글 페이지네이션 처리
-//		int pageSize = 10;
-//		int offset = (page - 1) * pageSize;
-//		int totalComments = boardService.getTotalCommentsCount(recipeId);
-//		int totalPages = (int) Math.ceil((double) totalComments / pageSize);
-//		List<BoardVo> boardList = boardService.getCommentsByCookId(recipeId, offset, pageSize);
-//
-//		System.out.println("가져온 댓글 개수: " + boardList.size());
-//		for (int i = 0; i < boardList.size(); i++) {
-//			BoardVo comment = boardList.get(i);
-//			if (comment == null) {
-//				System.err.println("!!!!! 경고: " + i + "번째 댓글 객체가 NULL 입니다 !!!!!!!!!");
-//			} else {
-//				System.out.println("댓글 " + i + ": board_no=" + comment.getBoard_no() + ", likeCount="
-//						+ comment.getLikeCount() + ", dislikeCount=" + comment.getDislikeCount());
-//			}
-//		}
-//
-//		// ✅ 북마크 확인
-//		boolean bookmarkExists = listService.isBookmarked(recipeId, userid);
-//
-//		// ✅ 모델에 데이터 전달
-//		model.addAttribute("loginedMemberVo", loginedMemberVo);
-//		model.addAttribute("recipe", recipe); // RecipeVo 객체 자체 전달
-//		model.addAttribute("steps", recipe.getSteps()); // 레시피 단계 리스트
-//		model.addAttribute("ingredients", recipe.getIngredients()); // 레시피 재료 리스트
-//		// model.addAttribute("boardList", boardList); // 댓글 리스트
-//		model.addAttribute("comments", boardList);
-//		model.addAttribute("currentPage", page);
-//		model.addAttribute("totalPages", totalPages);
-//		model.addAttribute("bookmarkExists", bookmarkExists);
-//		// ✨ 레시피의 좋아요/싫어요 수 모델에 추가 ✨
-//		model.addAttribute("likeCount", likeCount);
-//		model.addAttribute("dislikeCount", dislikeCount);
-//
-//		// 상세 페이지 템플릿 경로 반환
-//		return "/list/details";
-//	}
 	@GetMapping("/details")
 	public String getCookDetails(@RequestParam("recipeId") int recipeId,
 			@RequestParam(value = "page", defaultValue = "1") int page, Model model, HttpSession session,
@@ -262,26 +185,6 @@ public class ListController {
 		return response;
 	}
 
-	/*
-	 * @PostMapping("/bookmark") public String saveBookmark(@RequestParam("pageURL")
-	 * String pageURL, @RequestParam("userid") String userid,
-	 * 
-	 * @RequestParam("CKG_NM") String title, @RequestParam("cook_no") int recipeId,
-	 * Model model) {
-	 * 
-	 * try { // URL 인코딩 String encodedPageURL = URLEncoder.encode(pageURL, "UTF-8");
-	 * String encodedTitle = URLEncoder.encode(title, "UTF-8"); String
-	 * encodedRecipeId = URLEncoder.encode(String.valueOf(recipeId), "UTF-8");
-	 * 
-	 * // 북마크 저장 int result = listService.BookMark(encodedPageURL, userid, title,
-	 * recipeId);
-	 * 
-	 * // 리다이렉트 return "redirect:/list/details?cook_no=" + encodedRecipeId +
-	 * "&cookName=" + encodedTitle;
-	 * 
-	 * } catch (UnsupportedEncodingException e) { e.printStackTrace(); return
-	 * "error"; } }
-	 */
 	/*
 	 * 레시피 조회수 증가
 	 */
@@ -619,7 +522,7 @@ public class ListController {
 
 			// 완성 사진 관련
 			@RequestParam(value = "complete_photo", required = false) MultipartFile completePhoto,
-			@RequestParam("currentCompleteImgUrl") String currentCompleteImgUrl, // ⭐ 이 필드는 이제 HTML에서 항상 전송됩니다.
+			@RequestParam("currentCompleteImgUrl") String currentCompleteImgUrl,
 			@RequestParam("deleteImageFlag") String deleteImageFlag,
 
 			// 기존 재료 (ID, 이름, 수량)
@@ -667,7 +570,32 @@ public class ListController {
 		List<RecipeStepVo> stepsToReturn = new ArrayList<>();
 
 		try {
-			System.out.println("DEBUG: updateCooks 메서드 시작. RecipeId: " + recipeId);
+			System.out.println("--- DEBUG: updateCooks 메서드 시작 ---");
+			System.out.println(
+					"DEBUG: completePhoto isPresent=" + (completePhoto != null && !completePhoto.isEmpty() ? "Y" : "N")
+							+ ", deleteImageFlag=" + deleteImageFlag);
+			System.out.println("DEBUG: existingIngredientIds size: "
+					+ (existingIngredientIds != null ? existingIngredientIds.size() : "null"));
+			System.out.println("DEBUG: newIngredientNames size: "
+					+ (newIngredientNames != null ? newIngredientNames.size() : "null"));
+			System.out.println("DEBUG: deletedIngredientIdsStr: '"
+					+ (deletedIngredientIdsStr != null ? deletedIngredientIdsStr : "null") + "'");
+
+			// 🌟🌟 중요: 단계별 리스트 크기 로그 🌟🌟
+			System.out.println(
+					"DEBUG: existingStepIds size: " + (existingStepIds != null ? existingStepIds.size() : "null"));
+			System.out.println("DEBUG: existingStepDescriptions size: "
+					+ (existingStepDescriptions != null ? existingStepDescriptions.size() : "null"));
+			System.out.println("DEBUG: existingStepCurrentImgUrls size: "
+					+ (existingStepCurrentImgUrls != null ? existingStepCurrentImgUrls.size() : "null"));
+			System.out.println("DEBUG: existingStepDeleteImageFlags size: "
+					+ (existingStepDeleteImageFlags != null ? existingStepDeleteImageFlags.size() : "null"));
+			System.out.println("DEBUG: newStepDescriptions size: "
+					+ (newStepDescriptions != null ? newStepDescriptions.size() : "null"));
+			System.out.println(
+					"DEBUG: stepPhotos (전체 파일 리스트) size: " + (stepPhotos != null ? stepPhotos.size() : "null"));
+			System.out.println(
+					"DEBUG: deletedStepIdsStr: '" + (deletedStepIdsStr != null ? deletedStepIdsStr : "null") + "'");
 
 			// ====================================================================================
 			// 1. RecipeVo 기본 정보 구성 및 완성 이미지 처리
@@ -749,11 +677,7 @@ public class ListController {
 					try {
 						deletedIngredientIdList.add(Integer.parseInt(id.trim()));
 						System.out.println("DEBUG: 삭제될 재료 ID 감지: " + id.trim());
-					} /*
-						 * catch (NumberFormatException e) { // 이 부분은 이제 제거합니다.
-						 * System.err.println("WARN: 유효하지 않은 삭제된 재료 ID: " + id + " - " +
-						 * e.getMessage()); }
-						 */ catch (Exception e) { // NumberFormatException 외 다른 예외도 처리
+					} catch (Exception e) {
 						System.err.println("WARN: 유효하지 않은 삭제된 재료 ID: " + id + " 또는 파싱 오류 - " + e.getMessage());
 					}
 				}
@@ -788,33 +712,53 @@ public class ListController {
 					String currentStepImgUrl = existingStepCurrentImgUrls.get(i);
 					String deleteStepImageFlag = existingStepDeleteImageFlags.get(i);
 
+					// 🌟🌟 중요: 단계별 MultipartFile 로그 🌟🌟
 					MultipartFile stepPhoto = null;
 					if (stepPhotos != null && currentStepPhotoIndex < stepPhotos.size()) {
 						stepPhoto = stepPhotos.get(currentStepPhotoIndex);
-						// 파일이 비어있는 경우(선택하지 않은 경우)는 null로 처리 (MultipartFile.isEmpty() 사용)
+						System.out.println("DEBUG: Existing Step " + (i + 1) + " (currentStepPhotoIndex "
+								+ currentStepPhotoIndex + "):");
+						System.out.println("    - Original Filename: "
+								+ (stepPhoto != null ? stepPhoto.getOriginalFilename() : "null"));
+						System.out.println("    - Is Empty: " + (stepPhoto != null ? stepPhoto.isEmpty() : "N/A"));
+						System.out.println("    - Size: " + (stepPhoto != null ? stepPhoto.getSize() : "N/A"));
 						if (stepPhoto != null && stepPhoto.isEmpty()) {
-							stepPhoto = null;
+							stepPhoto = null; // 비어있는 파일은 null로 처리
 						}
+					} else {
+						System.out.println(
+								"DEBUG: Existing Step " + (i + 1) + " (currentStepPhotoIndex " + currentStepPhotoIndex
+										+ "): No MultipartFile found at this index or stepPhotos is null.");
 					}
 
-					if ("Y".equals(deleteStepImageFlag)) {
-						step.setStepImgUrl(null); // 이미지 삭제 플래그가 'Y'이면 URL을 null로 설정
-						System.out.println("DEBUG: 단계 " + step.getStepId() + " 이미지 삭제 플래그 'Y' 감지.");
-					} else if (stepPhoto != null) { // 새로운 파일이 업로드된 경우
+					// 📌 이미지 처리 로직 (새로운 파일 업로드가 최우선)
+					if (stepPhoto != null) { // 새로운 파일이 업로드된 경우 (stepPhoto는 이미 isEmpty() 체크 후 null로 설정되었으므로 여기서는 null만
+												// 체크)
 						try {
 							Map<String, Object> uploadStep = cloudinary.uploader().upload(stepPhoto.getBytes(),
 									ObjectUtils.emptyMap());
 							step.setStepImgUrl((String) uploadStep.get("secure_url"));
-							System.out
-									.println("DEBUG: 단계 " + step.getStepId() + " 새로운 이미지 업로드: " + step.getStepImgUrl());
+							System.out.println("DEBUG: Step " + (i + 1) + " (" + step.getStepId() + ") 새로운 이미지 업로드: "
+									+ step.getStepImgUrl());
 						} catch (IOException e) {
 							System.err.println(
 									"ERROR: 단계 이미지 업로드 중 오류 발생 (Step ID: " + step.getStepId() + "): " + e.getMessage());
 							step.setStepImgUrl(currentStepImgUrl); // 업로드 실패 시 기존 URL 유지
 						}
-					} else { // 이미지 변경/삭제 플래그가 없으면 기존 이미지 유지
-						step.setStepImgUrl(currentStepImgUrl);
-						System.out.println("DEBUG: 단계 " + step.getStepId() + " 기존 이미지 유지: " + step.getStepImgUrl());
+					} else if ("Y".equals(deleteStepImageFlag)) { // 새로운 파일은 없고, 삭제 플래그가 'Y'인 경우
+						step.setStepImgUrl(null); // 이미지 삭제 플래그가 'Y'이면 URL을 null로 설정
+						System.out.println(
+								"DEBUG: Step " + (i + 1) + " (" + step.getStepId() + ") 이미지 삭제 플래그 'Y' 감지. URL null.");
+					} else { // 새로운 파일도 없고, 삭제 플래그도 'Y'가 아닌 경우 (기존 이미지 유지 또는 JS에서 삭제된 경우)
+						if ("DELETED_IMAGE".equals(currentStepImgUrl)) { // ⭐ JS에서 'DELETED_IMAGE'를 보낸 경우
+							step.setStepImgUrl(null); // 실제 이미지 삭제로 처리
+							System.out.println("DEBUG: Step " + (i + 1) + " (" + step.getStepId()
+									+ ") 이미지 (JS에서) 삭제됨 감지. URL null 설정.");
+						} else {
+							step.setStepImgUrl(currentStepImgUrl); // 기존 URL 유지
+							System.out.println("DEBUG: Step " + (i + 1) + " (" + step.getStepId() + ") 기존 이미지 유지: "
+									+ step.getStepImgUrl());
+						}
 					}
 					stepsToProcess.add(step);
 					currentStepPhotoIndex++; // ⭐ 중요: 파일을 가져왔든 안 가져왔든 무조건 증가시켜야 함.
@@ -831,12 +775,24 @@ public class ListController {
 					step.setStepOrder(startIndex + i + 1); // 새로운 단계의 순서 설정
 					step.setDescription(newStepDescriptions.get(i));
 
+					// 🌟🌟 중요: 새로 추가된 단계 MultipartFile 로그 🌟🌟
 					MultipartFile newStepPhoto = null;
 					if (stepPhotos != null && currentStepPhotoIndex < stepPhotos.size()) {
 						newStepPhoto = stepPhotos.get(currentStepPhotoIndex);
+						System.out.println("DEBUG: New Step " + (startIndex + i + 1) + " (currentStepPhotoIndex "
+								+ currentStepPhotoIndex + "):");
+						System.out.println("    - Original Filename: "
+								+ (newStepPhoto != null ? newStepPhoto.getOriginalFilename() : "null"));
+						System.out
+								.println("    - Is Empty: " + (newStepPhoto != null ? newStepPhoto.isEmpty() : "N/A"));
+						System.out.println("    - Size: " + (newStepPhoto != null ? newStepPhoto.getSize() : "N/A"));
 						if (newStepPhoto != null && newStepPhoto.isEmpty()) { // 비어있어도 인덱스는 증가시켜야 합니다.
 							newStepPhoto = null;
 						}
+					} else {
+						System.out.println("DEBUG: New Step " + (startIndex + i + 1) + " (currentStepPhotoIndex "
+								+ currentStepPhotoIndex
+								+ "): No MultipartFile found at this index or stepPhotos is null.");
 					}
 
 					if (newStepPhoto != null) {
@@ -871,11 +827,7 @@ public class ListController {
 					try {
 						deletedStepIdList.add(Integer.parseInt(id.trim()));
 						System.out.println("DEBUG: 삭제될 단계 ID 감지: " + id.trim());
-					} /*
-						 * catch (NumberFormatException e) { // 이 부분도 제거
-						 * System.err.println("WARN: 유효하지 않은 삭제된 단계 ID: " + id + " - " +
-						 * e.getMessage()); }
-						 */ catch (Exception e) { // NumberFormatException 외 다른 예외도 처리
+					} catch (Exception e) {
 						System.err.println("WARN: 유효하지 않은 삭제된 단계 ID: " + id + " 또는 파싱 오류 - " + e.getMessage());
 					}
 				}
