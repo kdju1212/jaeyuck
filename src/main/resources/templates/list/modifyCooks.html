@@ -41,9 +41,10 @@
 						<button type="button" class="btn-delete-complete-image">이미지
 							삭제</button>
 					</div>
-					<input type="hidden" name="currentCompleteImgUrl"
-						th:value="${recipeInfo.completeImgUrl}" />
 				</div>
+				<input type="hidden" name="currentCompleteImgUrl"
+					th:value="${recipeInfo.completeImgUrl != null ? recipeInfo.completeImgUrl : ''}" />
+
 				<div class="initial-upload-section"
 					th:style="${not #strings.isEmpty(recipeInfo.completeImgUrl) ? 'display:none;' : 'display:block;'}">
 					<input type="file" name="complete_photo" id="complete_photo_upload"
@@ -92,6 +93,11 @@
 							th:text="${step.description}" placeholder="예) 양파를 썰어주세요."
 							required></textarea>
 
+						<input type="hidden" name="existingStepCurrentImgUrls"
+							th:value="${step.stepImgUrl}" /> <input type="hidden"
+							name="existingStepDeleteImageFlags" value="N"
+							class="step-delete-image-flag" />
+
 						<div class="step-image-container">
 							<div class="current-step-image-display"
 								th:style="${not #strings.isEmpty(step.stepImgUrl) ? 'display:block;' : 'display:none;'}">
@@ -100,10 +106,6 @@
 									style="max-width: 100px; height: auto; display: block; margin-bottom: 5px;" />
 								<button type="button" class="btn-delete-step-image"
 									th:data-step-id="${step.stepId}">이미지 삭제</button>
-								<input type="hidden" name="existingStepCurrentImgUrls"
-									th:value="${step.stepImgUrl}" /> <input type="hidden"
-									name="existingStepDeleteImageFlags" value="N"
-									class="step-delete-image-flag" />
 							</div>
 
 							<div class="new-step-image-upload-section"

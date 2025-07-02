@@ -30,8 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	// 재료 행 삭제 함수 (기존 재료 및 새로 추가된 재료 모두 처리)
 	window.removeRow = function(button) {
 		const row = button.closest('.material-row');
-		// input[name^="existingIngredientIds"] 대신 input[name="existingIngredientIds"]로 정확히 일치하는 요소를 찾습니다.
-		// 이는 기존 HTML이 그렇게 바뀌었기 때문입니다.
 		const ingredientIdInput = row.querySelector('input[name="existingIngredientIds"]');
 
 		if (ingredientIdInput && ingredientIdInput.value) {
@@ -49,10 +47,14 @@ document.addEventListener('DOMContentLoaded', function() {
 		const newStepItem = document.createElement('div');
 		newStepItem.classList.add('step-item');
 		newStepItem.innerHTML = `
-            <input type="hidden" name="newStepIds" value="0"> <label>Step ${currentStepTotalCount + 1}</label>
-            <textarea name="newStepDescriptions" placeholder="예) 양파를 썰어주세요." required></textarea> <div class="step-image-container">
-                <div class="new-step-image-upload-section" style="display: block;"> <label>단계 이미지 업로드 (선택)</label>
-                    <input type="file" name="step_photo" accept=".jpg,.jpeg,.png,.gif"> </div>
+            <label>Step ${currentStepTotalCount + 1}</label>
+            <textarea name="newStepDescriptions" placeholder="예) 양파를 썰어주세요." required></textarea>
+            
+            <div class="step-image-container">
+                <div class="new-step-image-upload-section" style="display: block;">
+                    <label>단계 이미지 업로드 (선택)</label>
+                    <input type="file" name="step_photo" accept=".jpg,.jpeg,.png,.gif">
+                </div>
             </div>
             <button type="button" class="remove-button btn-remove-step">-</button>
         `;
@@ -64,10 +66,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	stepsContainer.addEventListener('click', function(event) {
 		if (event.target.classList.contains('btn-remove-step')) {
 			const stepItem = event.target.closest('.step-item');
-			// input[name^="existingStepIds"] 대신 input[name="existingStepIds"]로 정확히 일치하는 요소를 찾습니다.
-			const stepIdInput = stepItem.querySelector('input[name="existingStepIds"]');
+			const stepIdInput = stepItem.querySelector('input[name="existingStepIds"]'); // 기존 단계 ID 확인
 
-			if (stepIdInput && stepIdInput.value) {
+			if (stepIdInput && stepIdInput.value) { // 기존 단계인 경우에만 deletedStepIds에 추가
 				const currentDeletedIds = deletedStepIdsInput.value;
 				deletedStepIdsInput.value = currentDeletedIds ? `${currentDeletedIds},${stepIdInput.value}` : stepIdInput.value;
 			}
@@ -76,17 +77,12 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	});
 
-	// 요리 순서 레이블 (Step 1, Step 2 등) 및 파일 input name 업데이트 함수
+	// 요리 순서 레이블 (Step 1, Step 2 등) 업데이트 함수
 	function updateStepLabels() {
 		const stepItems = stepsContainer.querySelectorAll('.step-item');
 
 		stepItems.forEach((item, index) => {
 			item.querySelector('label').textContent = `Step ${index + 1}`;
-
-			// 기존 이미지 섹션의 input[type="file"]은 name="step_photo"로 고정됩니다.
-			// 새로 추가된 단계의 input[type="file"]도 name="step_photo"로 고정됩니다.
-			// 따라서, 이 함수 내에서 name을 동적으로 변경할 필요가 없습니다.
-			// Spring은 동일한 이름의 여러 파일 input을 List<MultipartFile>로 잘 바인딩합니다.
 		});
 	}
 
@@ -102,10 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (initialUploadSection) initialUploadSection.style.display = 'block';
 
 				if (completePhotoUploadInput) {
-					// 이미지가 삭제되면 새로운 파일 업로드를 필수로 만들 수 있습니다.
-					// 하지만, 사용자가 이미지를 삭제하고 저장했는데, 새로운 이미지를 첨부하지 않을 수도 있으므로
-					// required=true를 해제하는 것이 더 유연합니다.
-					completePhotoUploadInput.required = false; // ✅ required=true 대신 false로 변경 권장
+					completePhotoUploadInput.required = false; // 이미지 삭제 후 새로운 이미지 첨부가 필수는 아니도록
 					completePhotoUploadInput.value = ''; // 파일 input 초기화
 				}
 
@@ -123,8 +116,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			const stepItem = button.closest('.step-item');
 			const currentImageDisplaySection = stepItem.querySelector('.current-step-image-display');
 			const newImageUploadSection = stepItem.querySelector('.new-step-image-upload-section');
-			const deleteFlagInput = stepItem.querySelector('.step-delete-image-flag');
-			const currentImgUrlInput = stepItem.querySelector('input[name="existingStepCurrentImgUrls"]'); // ✅ 수정됨: name 선택자
+			const deleteFlagInput = stepItem.querySelector('input[name="existingStepDeleteImageFlags"]');
+			const currentImgUrlInput = stepItem.querySelector('input[name="existingStepCurrentImgUrls"]');
 
 			const newFileInput = newImageUploadSection ? newImageUploadSection.querySelector('input[type="file"]') : null;
 
@@ -154,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	stepsContainer.querySelectorAll('.step-item').forEach(item => {
 		const currentImageDisplaySection = item.querySelector('.current-step-image-display');
 		const newImageUploadSection = item.querySelector('.new-step-image-upload-section');
-		const currentImageUrlInput = item.querySelector('input[name="existingStepCurrentImgUrls"]'); // ✅ 수정됨: name 선택자
+		const currentImageUrlInput = item.querySelector('input[name="existingStepCurrentImgUrls"]');
 
 		if (currentImageUrlInput && currentImageUrlInput.value) { // 기존 이미지가 있는 경우
 			if (currentImageDisplaySection) currentImageDisplaySection.style.display = 'block';

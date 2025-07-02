@@ -612,8 +612,9 @@ public class ListController {
 
 	@PostMapping("/modify")
 	public String updateCooks(@RequestParam("recipeId") int recipeId, @RequestParam("title") String title,
-			@RequestParam("kind") String kind, 
-			//@RequestParam("difficulty") String difficulty, // 난이도 필드 (스키마에 있다면 사용)
+			@RequestParam("kind") String kind,
+			// @RequestParam(value = "difficulty", required = false) String difficulty, //
+			// 난이도 필드가 DB 스키마에 있다면 사용하세요.
 			@RequestParam("tip") String tip,
 
 			// 완성 사진 관련
@@ -650,13 +651,28 @@ public class ListController {
 
 			HttpServletRequest request, Model model) {
 
+		// 💡 중요: 오류 발생 시 템플릿에 전달할 데이터 준비 (초기화)
+		// 이 데이터를 기반으로 Thymeleaf 템플릿이 다시 렌더링될 수 있도록 합니다.
+		// 사용자가 입력한 값들을 최대한 유지하여 재입력을 줄입니다.
+		RecipeVo recipeToReturn = new RecipeVo(); // 뷰에 다시 전달할 RecipeVo 객체
+		recipeToReturn.setRecipeId(recipeId);
+		recipeToReturn.setTitle(title);
+		recipeToReturn.setKind(kind);
+		// recipeToReturn.setDifficulty(difficulty); // 스키마에 있다면 추가
+		recipeToReturn.setTip(tip);
+		recipeToReturn.setCompleteImgUrl(currentCompleteImgUrl); // 일단 현재 이미지를 유지
+
+		// 재료 및 단계 리스트는 아래에서 실제 로직에 따라 채워지거나, 오류 시 빈 리스트로 초기화됩니다.
+		List<RecipeIngredientVo> ingredientsToReturn = new ArrayList<>();
+		List<RecipeStepVo> stepsToReturn = new ArrayList<>();
+
 		try {
 			System.out.println("DEBUG: updateCooks 메서드 시작. RecipeId: " + recipeId);
 
 			// ====================================================================================
 			// 1. RecipeVo 기본 정보 구성 및 완성 이미지 처리
 			// ====================================================================================
-			RecipeVo recipe = new RecipeVo();
+			RecipeVo recipe = new RecipeVo(); // 이 recipe 객체는 서비스에 전달될 최종 객체입니다.
 			recipe.setRecipeId(recipeId);
 			recipe.setTitle(title);
 			recipe.setKind(kind);
@@ -668,22 +684,33 @@ public class ListController {
 			if ("Y".equals(deleteImageFlag)) {
 				recipe.setCompleteImgUrl(null);
 				System.out.println("DEBUG: 완성 이미지 삭제 플래그 'Y' 감지. 이미지 URL null로 설정.");
+				recipeToReturn.setCompleteImgUrl(null); // 오류 시 반환될 객체에도 반영
 			} else if (completePhoto != null && !completePhoto.isEmpty()) {
 				Map<String, Object> uploadResult = cloudinary.uploader().upload(completePhoto.getBytes(),
 						ObjectUtils.emptyMap());
 				recipe.setCompleteImgUrl((String) uploadResult.get("secure_url"));
 				System.out.println("DEBUG: 새로운 완성 이미지 업로드: " + recipe.getCompleteImgUrl());
+				recipeToReturn.setCompleteImgUrl((String) uploadResult.get("secure_url")); // 오류 시 반환될 객체에도 반영
 			} else {
 				recipe.setCompleteImgUrl(currentCompleteImgUrl);
 				System.out.println("DEBUG: 기존 완성 이미지 유지: " + recipe.getCompleteImgUrl());
+				// recipeToReturn.setCompleteImgUrl은 이미 초기화 시 currentCompleteImgUrl로 설정됨
 			}
 
 			// ====================================================================================
 			// 2. 재료 처리 (기존 수정, 새로 추가)
+			// 💡 IndexOutOfBoundsException 방지를 위해 리스트 크기 검증 강화
 			// ====================================================================================
 			List<RecipeIngredientVo> ingredientsToProcess = new ArrayList<>();
 
 			if (existingIngredientIds != null) {
+				// 모든 관련 리스트의 크기가 동일한지 확인
+				if (existingIngredientNames == null || existingIngredientAmounts == null
+						|| existingIngredientIds.size() != existingIngredientNames.size()
+						|| existingIngredientIds.size() != existingIngredientAmounts.size()) {
+					throw new IllegalArgumentException("기존 재료 데이터의 개수가 일치하지 않습니다. (이름 또는 수량 누락)");
+				}
+
 				for (int i = 0; i < existingIngredientIds.size(); i++) {
 					RecipeIngredientVo ing = new RecipeIngredientVo();
 					ing.setIngredientId(existingIngredientIds.get(i));
@@ -697,6 +724,10 @@ public class ListController {
 			}
 
 			if (newIngredientNames != null) {
+				// 새 재료 이름 리스트가 있다면 수량 리스트도 있어야 하고 길이가 동일해야 함
+				if (newIngredientAmounts == null || newIngredientNames.size() != newIngredientAmounts.size()) {
+					throw new IllegalArgumentException("새 재료 데이터의 개수가 일치하지 않습니다. (새로운 재료 이름 또는 수량 누락)");
+				}
 				for (int i = 0; i < newIngredientNames.size(); i++) {
 					RecipeIngredientVo ing = new RecipeIngredientVo();
 					ing.setRecipeId(recipeId);
@@ -707,6 +738,8 @@ public class ListController {
 				}
 			}
 			recipe.setIngredients(ingredientsToProcess);
+			// ⭐ 중요: 오류 시 뷰에 다시 전달하기 위해 현재 처리된 재료 목록을 저장
+			ingredientsToReturn.addAll(ingredientsToProcess);
 
 			// 삭제된 재료 ID 목록 파싱
 			List<Integer> deletedIngredientIdList = new ArrayList<>();
@@ -724,16 +757,28 @@ public class ListController {
 
 			// ====================================================================================
 			// 3. 단계 처리 (기존 수정, 새로 추가, 이미지 업로드/삭제)
+			// 💡 IndexOutOfBoundsException 방지를 위해 리스트 크기 검증 강화
 			// ====================================================================================
 			List<RecipeStepVo> stepsToProcess = new ArrayList<>();
-			int currentStepPhotoIndex = 0;
+			int currentStepPhotoIndex = 0; // stepPhotos 리스트에서 현재 처리할 파일의 인덱스
 
+			// 기존 단계 처리
 			if (existingStepIds != null) {
+				// 모든 기존 단계 관련 리스트의 크기가 existingStepIds의 크기와 동일한지 확인
+				if (existingStepDescriptions == null || existingStepCurrentImgUrls == null
+						|| existingStepDeleteImageFlags == null
+						|| existingStepIds.size() != existingStepDescriptions.size()
+						|| existingStepIds.size() != existingStepCurrentImgUrls.size()
+						|| existingStepIds.size() != existingStepDeleteImageFlags.size()) {
+					throw new IllegalArgumentException(
+							"기존 단계 데이터의 각 필드(ID, 설명, 이미지 URL, 삭제 플래그) 개수가 일치하지 않습니다. 데이터 손실 또는 전송 오류를 확인하세요.");
+				}
+
 				for (int i = 0; i < existingStepIds.size(); i++) {
 					RecipeStepVo step = new RecipeStepVo();
 					step.setStepId(existingStepIds.get(i));
 					step.setRecipeId(recipeId);
-					step.setStepOrder(i + 1);
+					step.setStepOrder(i + 1); // 단계 순서
 					step.setDescription(existingStepDescriptions.get(i));
 
 					String currentStepImgUrl = existingStepCurrentImgUrls.get(i);
@@ -742,15 +787,16 @@ public class ListController {
 					MultipartFile stepPhoto = null;
 					if (stepPhotos != null && currentStepPhotoIndex < stepPhotos.size()) {
 						stepPhoto = stepPhotos.get(currentStepPhotoIndex);
+						// 파일이 비어있는 경우(선택하지 않은 경우)는 null로 처리
 						if (stepPhoto.isEmpty()) {
 							stepPhoto = null;
 						}
 					}
 
 					if ("Y".equals(deleteStepImageFlag)) {
-						step.setStepImgUrl(null);
+						step.setStepImgUrl(null); // 이미지 삭제 플래그가 'Y'이면 URL을 null로 설정
 						System.out.println("DEBUG: 단계 " + step.getStepId() + " 이미지 삭제 플래그 'Y' 감지.");
-					} else if (stepPhoto != null) {
+					} else if (stepPhoto != null) { // 새로운 파일이 업로드된 경우
 						try {
 							Map<String, Object> uploadStep = cloudinary.uploader().upload(stepPhoto.getBytes(),
 									ObjectUtils.emptyMap());
@@ -760,25 +806,25 @@ public class ListController {
 						} catch (IOException e) {
 							System.err.println(
 									"ERROR: 단계 이미지 업로드 중 오류 발생 (Step ID: " + step.getStepId() + "): " + e.getMessage());
-							step.setStepImgUrl(currentStepImgUrl);
+							step.setStepImgUrl(currentStepImgUrl); // 업로드 실패 시 기존 URL 유지
 						}
-					} else {
+					} else { // 이미지 변경/삭제 플래그가 없으면 기존 이미지 유지
 						step.setStepImgUrl(currentStepImgUrl);
 						System.out.println("DEBUG: 단계 " + step.getStepId() + " 기존 이미지 유지: " + step.getStepImgUrl());
 					}
 					stepsToProcess.add(step);
-					currentStepPhotoIndex++;
+					currentStepPhotoIndex++; // 다음 파일 인덱스로 이동
 				}
 			}
 
+			// 새로 추가된 단계 처리
 			if (newStepDescriptions != null) {
+				// 기존 단계가 있다면 그 다음 순서부터, 없다면 1부터 시작
 				int startIndex = (existingStepIds != null) ? existingStepIds.size() : 0;
 				for (int i = 0; i < newStepDescriptions.size(); i++) {
-					RecipeStepVo step = new RecipeStepVo(); // ⭐ Type mismatch: RecipeVo cannot be converted to RecipeStepVo
-					// ⭐ 위에 RecipeVo로 잘못 선언되어 있습니다. RecipeStepVo로 수정해야 합니다.
-					// RecipeStepVo step = new RecipeStepVo(); // <-- 이렇게 수정
+					RecipeStepVo step = new RecipeStepVo();
 					step.setRecipeId(recipeId);
-					step.setStepOrder(startIndex + i + 1);
+					step.setStepOrder(startIndex + i + 1); // 새로운 단계의 순서 설정
 					step.setDescription(newStepDescriptions.get(i));
 
 					MultipartFile newStepPhoto = null;
@@ -799,17 +845,19 @@ public class ListController {
 						} catch (IOException e) {
 							System.err.println("ERROR: 새 단계 이미지 업로드 중 오류 발생 (Step Order: " + step.getStepOrder() + "): "
 									+ e.getMessage());
-							step.setStepImgUrl(null);
+							step.setStepImgUrl(null); // 업로드 실패 시 null
 						}
 					} else {
-						step.setStepImgUrl(null);
+						step.setStepImgUrl(null); // 새 단계에 이미지가 없으면 null
 						System.out.println("DEBUG: 새 단계 " + step.getStepOrder() + " 이미지 없음.");
 					}
 					stepsToProcess.add(step);
-					currentStepPhotoIndex++;
+					currentStepPhotoIndex++; // 다음 파일 인덱스로 이동
 				}
 			}
 			recipe.setSteps(stepsToProcess);
+			// ⭐ 중요: 오류 시 뷰에 다시 전달하기 위해 현재 처리된 단계 목록을 저장
+			stepsToReturn.addAll(stepsToProcess);
 
 			// 삭제된 단계 ID 목록 파싱
 			List<Integer> deletedStepIdList = new ArrayList<>();
@@ -832,23 +880,45 @@ public class ListController {
 
 			if (!isUpdated) {
 				System.out.println("DEBUG: 레시피 수정 실패.");
-				model.addAttribute("errorMessage", "레시피 수정에 실패했습니다.");
-				return "list/modifyCooks";
+				model.addAttribute("errorMessage", "레시피 수정에 실패했습니다. 데이터베이스 오류일 수 있습니다.");
+				// ⭐ 오류 시 반환될 모델 데이터 추가: 필수!
+				model.addAttribute("recipeInfo", recipeToReturn);
+				model.addAttribute("ingredients", ingredientsToReturn);
+				model.addAttribute("steps", stepsToReturn);
+				return "list/modifyCooks"; // 수정 페이지로 다시 돌아감
 			}
 
 			System.out.println("DEBUG: 레시피 수정 성공! RecipeId: " + recipeId);
-			return "redirect:/list/details?recipeId=" + recipeId;
+			return "redirect:/list/details?recipeId=" + recipeId; // 수정 성공 시 상세 페이지로 리다이렉트
 
+		} catch (IllegalArgumentException e) {
+			// ⭐ 새로 추가된 예외 처리: 데이터 불일치 (프론트엔드에서 데이터가 제대로 넘어오지 않은 경우)
+			System.err.println("ERROR: 입력 데이터 오류: " + e.getMessage());
+			e.printStackTrace();
+			model.addAttribute("errorMessage", "입력된 재료 또는 단계 데이터가 올바르지 않습니다: " + e.getMessage());
+			// ⭐ 오류 시 반환될 모델 데이터 추가: 필수!
+			model.addAttribute("recipeInfo", recipeToReturn);
+			model.addAttribute("ingredients", ingredientsToReturn);
+			model.addAttribute("steps", stepsToReturn);
+			return "list/modifyCooks"; // 수정 페이지로 다시 돌아감
 		} catch (IOException e) {
 			System.err.println("ERROR: 파일 업로드 중 오류 발생: " + e.getMessage());
 			e.printStackTrace();
-			model.addAttribute("errorMessage", "파일 업로드 중 오류 발생");
-			return "list/modifyCooks";
+			model.addAttribute("errorMessage", "파일 업로드 중 오류가 발생했습니다. 다시 시도해주세요.");
+			// ⭐ 오류 시 반환될 모델 데이터 추가: 필수!
+			model.addAttribute("recipeInfo", recipeToReturn);
+			model.addAttribute("ingredients", ingredientsToReturn);
+			model.addAttribute("steps", stepsToReturn);
+			return "list/modifyCooks"; // 수정 페이지로 다시 돌아감
 		} catch (Exception e) {
 			System.err.println("ERROR: 레시피 수정 중 알 수 없는 오류 발생: " + e.getMessage());
 			e.printStackTrace();
-			model.addAttribute("errorMessage", "레시피 수정 중 오류 발생");
-			return "list/modifyCooks";
+			model.addAttribute("errorMessage", "레시피 수정 중 알 수 없는 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+			// ⭐ 오류 시 반환될 모델 데이터 추가: 필수!
+			model.addAttribute("recipeInfo", recipeToReturn);
+			model.addAttribute("ingredients", ingredientsToReturn);
+			model.addAttribute("steps", stepsToReturn);
+			return "list/modifyCooks"; // 수정 페이지로 다시 돌아감
 		}
 	}
 
